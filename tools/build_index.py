@@ -71,6 +71,46 @@ sub("""        <li>No evidence to upload. "Don't know" is a fine answer; it show
     """        <li>No evidence to upload. "Don't know" is a fine answer; it shows you what to find out.</li>\n"""
     """        <li>Your answers stay in this browser. The page makes no network requests, and its security policy blocks them.</li>\n""")
 
+# 4b. Link the evidence behind the questions (docs/user-guide-evidence.md, docs/evidence.md):
+#     one line in the intro, one link per step in the quiz (never per question, to keep the
+#     question blocks quiet), and the report footer plus its Markdown export. Links open in a
+#     new tab, announced to screen readers through aria-label (no hidden text reaches the PDF).
+#     The CSP limits requests the page makes, not navigation. ↗ (U+2197) is in the font subset.
+GUIDE = "https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md"
+REGISTER = "https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/evidence.md"
+NEW_TAB = " (opens in a new tab)"
+# The quiz steps that have a section in the guide; names match its "## " headings exactly.
+GUIDE_STEPS = ["Instructions", "Outside content", "Memory", "Knowledge sources", "Users", "Tools", "MCP servers",
+               "Skills, plugins and hooks", "Code execution", "Browser", "Actions", "Other agents", "Oversight"]
+
+
+def a(href, text, label):
+    return f'<a href="{href}" target="_blank" rel="noopener" aria-label="{label}{NEW_TAB}">{text} ↗</a>'
+
+
+LINKS = ".hero li a, .note a, #qDesc a"
+sub("@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n</style>",
+    "@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n"
+    f"{LINKS} {{ color: var(--accent); }}\n"
+    f"{LINKS.replace(', ', ':visited, ')}:visited {{ color: color-mix(in srgb, var(--accent) 60%, var(--muted)); }}\n</style>")
+sub("""        <li>Your answers stay in this browser. The page makes no network requests, and its security policy blocks them.</li>\n""",
+    """        <li>Your answers stay in this browser. The page makes no network requests, and its security policy blocks them.</li>\n"""
+    f"""        <li>Why each question is here: {a(GUIDE, "the evidence", "the evidence")}, from real incidents, research and security standards.</li>\n""")
+sub("""    document.getElementById("qDesc").textContent = b.desc;\n""",
+    """    document.getElementById("qDesc").textContent = b.desc;\n"""
+    f"""    if ({json.dumps(GUIDE_STEPS)}.indexOf(b.name) >= 0) {{\n"""
+    """      var evA = el("a", null, "Why we ask these \\u2197"), evD = document.getElementById("qDesc");\n"""
+    f"""      evA.href = "{GUIDE}#" + b.name.toLowerCase().replace(/[^a-z0-9 -]/g, "").replace(/ /g, "-");\n"""
+    f"""      evA.target = "_blank"; evA.rel = "noopener"; evA.setAttribute("aria-label", "Why we ask these: evidence for " + b.name + "{NEW_TAB}");\n"""
+    """      evD.appendChild(document.createTextNode(" \\u00B7 ")); evD.appendChild(evA);\n"""
+    """    }\n""")
+sub("""      <p class="note">The rule behind every question: the model may propose, but something outside the model must authorize.</p>\n""",
+    """      <p class="note">The rule behind every question: the model may propose, but something outside the model must authorize.</p>\n"""
+    f"""      <p class="note">Evidence behind these questions: {a(GUIDE, "why we ask them", "why we ask them")} · {a(REGISTER, "evidence register", "evidence register")}.</p>\n""")
+sub('''    out.push("", "---", "", "The rule behind every question: the model may propose, but something outside the model must authorize.");''',
+    '''    out.push("", "---", "", "The rule behind every question: the model may propose, but something outside the model must authorize.");\n'''
+    f'''    out.push("", "Evidence behind these questions: [why we ask them]({GUIDE}) \\u00B7 [evidence register]({REGISTER}).");''')
+
 # 5. jsPDF is bundled, so nothing to fetch.
 sub('  var JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";\n', "")
 old_loader = re.search(r"  function loadJsPDF\(\) \{\n.*?\n  \}\n(?=  function fileBase)", html, re.S)
