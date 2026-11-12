@@ -29,8 +29,9 @@ FACES = [
 
 # Basic Latin, Latin-1, Latin Extended-A (European names), punctuation,
 # currency, arrows and the math minus. Everything the app's text uses is in here.
+# Keep PDF_GLYPHS in tools/pdf_render.js in step: text outside it is drawn as an image, without its link.
 RANGES = [(0x20, 0x7E), (0xA0, 0xFF), (0x100, 0x17F), (0x2010, 0x2027),
-          (0x2030, 0x203A), (0x20AC, 0x20AC), (0x2122, 0x2122), (0x2190, 0x2193), (0x2212, 0x2212)]
+          (0x2030, 0x203A), (0x20AC, 0x20AC), (0x2122, 0x2122), (0x2190, 0x2193), (0x2197, 0x2197), (0x2212, 0x2212)]
 UNICODES = [c for a, b in RANGES for c in range(a, b + 1)]
 
 manifest = []

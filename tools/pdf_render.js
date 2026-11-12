@@ -7,7 +7,7 @@
      Text in scripts the bundled fonts don't cover is drawn as an image. */
   var PDF_W = 800;                                      // CSS px the report is laid out at
   var PDF_M = { top: 40, side: 36, bottom: 46 };        // page margins, pt
-  var PDF_GLYPHS = /^[\x20-\x7E\xA0-ſ‐-‧‰-›€™←-↓−]*$/;
+  var PDF_GLYPHS = /^[\x20-\x7E\xA0-ſ‐-‧‰-›€™←-↓↗−]*$/;
   var PDF_CSS = [
     "html, body { background: #fff !important; }",
     "body { margin: 0 !important; padding: 0 !important; }",
