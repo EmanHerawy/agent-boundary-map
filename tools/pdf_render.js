@@ -67,8 +67,8 @@
     return out + css.slice(last);
   }
 
-  // Lay out a copy of the report in a hidden frame at PDF_W, light mode, all sections open.
-  function pdfLayout() {
+  // Lay out a copy of the report (or the summary, mode "summary") in a hidden frame at PDF_W, light mode, all sections open.
+  function pdfLayout(mode) {
     var fr = document.createElement("iframe");
     fr.setAttribute("aria-hidden", "true"); fr.tabIndex = -1; fr.title = "PDF layout";
     fr.style.cssText = "position:fixed;left:-20000px;top:0;width:" + PDF_W + "px;height:1200px;border:0;opacity:0;pointer-events:none;color-scheme:light";
@@ -86,8 +86,10 @@
         try { var ff = new w.FontFace(f.family, f.buf, { weight: String(f.weight), style: "normal" }); d.fonts.add(ff); return ff.load(); } catch (e) { return null; }
       }).filter(Boolean);
       var app = d.createElement("div"); app.id = "app"; app.className = "wrap";
-      var sec = document.getElementById("v-map").cloneNode(true);
+      var sec = mode === "summary" ? miniDom() : document.getElementById("v-map").cloneNode(true);
       sec.hidden = false;
+      // The full report is drawn whole, whichever view is on screen.
+      if (mode !== "summary") { sec.classList.remove("sumv"); var sv = sec.querySelector("#sumView"); if (sv) sv.remove(); }
       app.appendChild(d.adoptNode(sec)); d.body.appendChild(app);
       // Open everything about this agent's answers. Generic illustrative examples stay closed, as in the Markdown export.
       Array.prototype.forEach.call(sec.querySelectorAll("details"), function (x) {
@@ -283,7 +285,7 @@
     return cuts;
   }
 
-  function pdfDraw(JsPDF, model, title) {
+  function pdfDraw(JsPDF, model, title, mode) {
     var doc = new JsPDF({ unit: "pt", format: "a4", compress: true });
     (window.__ABM_FONTS || []).forEach(function (f) { doc.addFileToVFS(f.id + ".ttf", f.b64); doc.addFont(f.id + ".ttf", f.id, "normal"); });
     var PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight();
@@ -360,12 +362,12 @@
       doc.text(ff === "helvetica" ? pdfSafe(foot) : foot, PDF_M.side, PH - 22);
       doc.text(i + " / " + n, PW - PDF_M.side, PH - 22, { align: "right" });
     }
-    doc.setProperties({ title: (name ? name + " - " : "") + "Agent Boundary Map", subject: "Boundary report. Self-reported, not verified.", creator: "Agent Boundary Map" });
+    doc.setProperties({ title: (name ? name + " - " : "") + "Agent Boundary Map", subject: (mode === "summary" ? "Boundary summary" : "Boundary report") + ". Self-reported, not verified.", creator: "Agent Boundary Map" });
     return doc.output("arraybuffer");
   }
 
-  function buildPdf(JsPDF, md, title) {
-    return pdfLayout().then(function (L) {
-      try { return pdfDraw(JsPDF, pdfCollect(L), title); } finally { L.remove(); }
+  function buildPdf(JsPDF, md, title, mode) {
+    return pdfLayout(mode).then(function (L) {
+      try { return pdfDraw(JsPDF, pdfCollect(L), title, mode); } finally { L.remove(); }
     });
   }

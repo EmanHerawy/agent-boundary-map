@@ -6,8 +6,9 @@
 |---|---|
 | `build_fonts.py` | Pins the variable fonts to static weights, subsets them to Latin and writes `fonts.json` (base64 plus baseline metrics). |
 | `build_index.py` | Starts from the v20 export (`src/v20-export.html`, the published Agent Trust Map artifact, unchanged): renames the product, bundles fonts and jsPDF, adds the network-blocking CSP, swaps in the PDF renderer and the browser download path. Each replacement asserts its count. |
-| `pdf_render.js` | The PDF renderer: lays the report out in a hidden frame and draws it into jsPDF. |
-| `test_exports.sh` | Exports all five example reports and checks headlines, overlapping text, console errors and network requests. |
+| `pdf_render.js` | The PDF renderer: lays the report (or the summary) out in a hidden frame and draws it into jsPDF. |
+| `mini_report.js` | The summary report (1–2 pages): Markdown and the PDF layout, plus `topActions()`, which picks the top actions everywhere. `build_index.py` reads it from this folder. |
+| `test_exports.sh` | Exports all five example reports, full and summary, and checks headlines, overlapping text, console errors and network requests. Summaries must be 2 pages at most, include every main finding, and keep finding headlines out of the top actions. |
 | `overlap.py` | Finds words drawn on top of each other in a PDF (used by the test). |
 
 ## Inputs (not committed)

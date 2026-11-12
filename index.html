@@ -288,6 +288,12 @@ details.grp > summary { list-style: none; }
 details.grp > summary::-webkit-details-marker { display: none; }
 textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); font-size: 0.76rem; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--fg); }
 @media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }
+.seg { display: inline-flex; align-items: center; border: 0; margin: 0 10px 0 0; padding: 0; min-width: 0; }
+.seg legend { float: left; padding: 0; margin-right: 12px; font-size: 0.8rem; color: var(--muted); }
+.seg label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 0.88rem; cursor: pointer; }
+.seg label + label { margin-left: 16px; }
+.seg input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.seg label:has(input:checked) { font-weight: 600; }
 .hero li a, .note a, #qDesc a { color: var(--accent); }
 .hero li a:visited, .note a:visited, #qDesc a:visited { color: color-mix(in srgb, var(--accent) 60%, var(--muted)); }
 </style>
@@ -341,7 +347,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
         <span><strong>Example report.</strong> <span id="exName"></span> Illustrative, not about your system.</span>
         <span class="btnrow"><button class="btn" type="button" id="backIntroBtn">All examples</button><button class="btn primary" type="button" id="ownBtn">Map my own agent</button></span>
       </div>
-      <div class="card">
+      <div class="card" id="mapHeadCard">
         <div class="maphead">
           <div>
             <span class="eyebrow">Boundary report</span>
@@ -349,6 +355,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
             <p id="mapSub"></p>
           </div>
           <div class="btnrow">
+            <fieldset class="seg" id="reportMode"><legend>Report</legend><label><input type="radio" name="rmode" value="summary" checked> Summary</label><label><input type="radio" name="rmode" value="full"> Full</label></fieldset>
             <button class="btn" type="button" id="editBtn">Change answers</button>
             <button class="btn" type="button" id="copyBtn">Copy summary</button>
             <button class="btn" type="button" id="mdBtn" hidden>Download Markdown</button>
@@ -363,6 +370,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
         <textarea id="copyBox" readonly></textarea>
         <p class="note" id="copyNote"></p>
       </div>
+      <div id="sumView"></div>
       <div class="card summary" id="summary"></div>
       <div id="findings" class="wrap" style="gap:14px"></div>
       <div class="card">
@@ -4387,10 +4395,10 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     host.appendChild(el("p", "fnote", "These routes show what your answers allow. They aren't evidence that an attack has happened or would succeed."));
     var lgd = el("details", "more legsmore"); lgd.appendChild(el("summary", null, "Three-legs check: the same result, leg by leg")); lgd.appendChild(legsCard(legs(s, a), true)); host.appendChild(lgd);
     if (R.some(function (r) { return r.k !== "data" && r.label !== "none"; })) host.appendChild(el("p", "fnote", "Human approval (A4) only protects the actions it asks about. It doesn't cover data leaving through web requests, DNS, MCP servers, links or images in replies, or tools that don't ask first. A useful rule of thumb: in one session, give the agent no more than two of untrusted input, sensitive data or systems, and the ability to change things or send data out. It lowers the risk; it doesn't remove it."));
-    if (ranked.length) {
+    if (topActions(ranked, s, a).length) {
       host.appendChild(el("div", "sect", "Top actions"));
       var ol = el("ol", "acts top");
-      ranked.slice(0, 3).forEach(function (x) {
+      topActions(ranked, s, a).forEach(function (x) {
         var ac = actsFor(x.te, s, a)[0], li = el("li");
         if (!ac) return;
         var subs = actNode(li, fillT(ac.t, s)); ac.tags.forEach(function (g) { li.appendChild(el("span", "tag", g)); }); actList(li, subs);
@@ -4562,6 +4570,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     renderLists(s, a);
     document.getElementById("copyCard").hidden = true;
     exportNote("");
+    applyView();
   }
 
   function splitRisk(risk) {
@@ -4582,7 +4591,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     out.push("", "ROUTES (untrusted input steering the agent)");
     E.R.forEach(function (r) { var rt = routeText(r, s); out.push("- " + r.name + ": " + RLABEL[r.label] + (rt ? ". " + rt : ".")); });
     out.push("Three-legs check: " + [L.l1, L.l2, L.l3a, L.l3b].map(function (l) { return l.t.toLowerCase() + " " + (!l.present ? "absent" : l.broken ? "blocked" : "present"); }).join("; ") + ".");
-    if (E.risk.length) { out.push("", "TOP ACTIONS"); E.risk.slice(0, 3).forEach(function (x, i) { var ac = actsFor(x.te, s, a)[0]; if (ac) out.push((i + 1) + ". " + actText(fillT(ac.t, s), "     ") + "\n   [" + ac.tags.join(", ") + "] Finding: " + headOf(x.te, a)); }); }
+    if (topActions(E.risk, s, a).length) { out.push("", "TOP ACTIONS"); topActions(E.risk, s, a).forEach(function (x, i) { var ac = actsFor(x.te, s, a)[0]; if (ac) out.push((i + 1) + ". " + actText(fillT(ac.t, s), "     ") + "\n   [" + ac.tags.join(", ") + "] Finding: " + headOf(x.te, a)); }); }
     if (E.findOut.length) { out.push("", "FIND OUT FIRST"); E.findOut.slice(0, 3).forEach(function (f) { out.push("- " + f); }); }
     out.push("", "BOUNDARIES (map)");
     res.forEach(function (r) { out.push("- " + r.b.name + ": " + (r.status ? boxCount(r).text + "; weakest: " + LBL[r.status].toLowerCase() : "not answered")); });
@@ -4666,9 +4675,9 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     });
     out.push("", "**Route labels.** Open route: every required step is open. Possible route: it depends on answers that are not known. Incomplete: some steps are unanswered. Interrupted: a control reported as enforced outside the model blocks a step. No route: a required condition is missing.", "", "These routes show what your answers allow. They aren't evidence that an attack has happened or would succeed.", "", "### Three-legs check", "");
     [L.l1, L.l2, L.l3a, L.l3b].forEach(function (l) { out.push("- **" + l.t + ":** " + (!l.present ? "absent" : l.broken ? "blocked" : "present") + ". " + l.why); });
-    if (E.risk.length) {
+    if (topActions(E.risk, s, a).length) {
       out.push("", "## Top actions", "");
-      E.risk.slice(0, 3).forEach(function (x, i) { var ac = actsFor(x.te, s, a)[0]; if (!ac) return; mdAct(out, (i + 1) + ". ", ac, s, "   "); out.push("   Finding: " + endDot(headOf(x.te, a))); });
+      topActions(E.risk, s, a).forEach(function (x, i) { var ac = actsFor(x.te, s, a)[0]; if (!ac) return; mdAct(out, (i + 1) + ". ", ac, s, "   "); out.push("   Finding: " + endDot(headOf(x.te, a))); });
     }
     if (E.findOut.length) { out.push("", "## Find out first", ""); E.findOut.slice(0, 3).forEach(function (f) { out.push("- " + f); }); }
     var split = splitRisk(E.risk);
@@ -4756,8 +4765,8 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     return out + css.slice(last);
   }
 
-  // Lay out a copy of the report in a hidden frame at PDF_W, light mode, all sections open.
-  function pdfLayout() {
+  // Lay out a copy of the report (or the summary, mode "summary") in a hidden frame at PDF_W, light mode, all sections open.
+  function pdfLayout(mode) {
     var fr = document.createElement("iframe");
     fr.setAttribute("aria-hidden", "true"); fr.tabIndex = -1; fr.title = "PDF layout";
     fr.style.cssText = "position:fixed;left:-20000px;top:0;width:" + PDF_W + "px;height:1200px;border:0;opacity:0;pointer-events:none;color-scheme:light";
@@ -4775,8 +4784,10 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
         try { var ff = new w.FontFace(f.family, f.buf, { weight: String(f.weight), style: "normal" }); d.fonts.add(ff); return ff.load(); } catch (e) { return null; }
       }).filter(Boolean);
       var app = d.createElement("div"); app.id = "app"; app.className = "wrap";
-      var sec = document.getElementById("v-map").cloneNode(true);
+      var sec = mode === "summary" ? miniDom() : document.getElementById("v-map").cloneNode(true);
       sec.hidden = false;
+      // The full report is drawn whole, whichever view is on screen.
+      if (mode !== "summary") { sec.classList.remove("sumv"); var sv = sec.querySelector("#sumView"); if (sv) sv.remove(); }
       app.appendChild(d.adoptNode(sec)); d.body.appendChild(app);
       // Open everything about this agent's answers. Generic illustrative examples stay closed, as in the Markdown export.
       Array.prototype.forEach.call(sec.querySelectorAll("details"), function (x) {
@@ -4972,7 +4983,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     return cuts;
   }
 
-  function pdfDraw(JsPDF, model, title) {
+  function pdfDraw(JsPDF, model, title, mode) {
     var doc = new JsPDF({ unit: "pt", format: "a4", compress: true });
     (window.__ABM_FONTS || []).forEach(function (f) { doc.addFileToVFS(f.id + ".ttf", f.b64); doc.addFont(f.id + ".ttf", f.id, "normal"); });
     var PW = doc.internal.pageSize.getWidth(), PH = doc.internal.pageSize.getHeight();
@@ -5049,13 +5060,13 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       doc.text(ff === "helvetica" ? pdfSafe(foot) : foot, PDF_M.side, PH - 22);
       doc.text(i + " / " + n, PW - PDF_M.side, PH - 22, { align: "right" });
     }
-    doc.setProperties({ title: (name ? name + " - " : "") + "Agent Boundary Map", subject: "Boundary report. Self-reported, not verified.", creator: "Agent Boundary Map" });
+    doc.setProperties({ title: (name ? name + " - " : "") + "Agent Boundary Map", subject: (mode === "summary" ? "Boundary summary" : "Boundary report") + ". Self-reported, not verified.", creator: "Agent Boundary Map" });
     return doc.output("arraybuffer");
   }
 
-  function buildPdf(JsPDF, md, title) {
-    return pdfLayout().then(function (L) {
-      try { return pdfDraw(JsPDF, pdfCollect(L), title); } finally { L.remove(); }
+  function buildPdf(JsPDF, md, title, mode) {
+    return pdfLayout(mode).then(function (L) {
+      try { return pdfDraw(JsPDF, pdfCollect(L), title, mode); } finally { L.remove(); }
     });
   }
   function loadJsPDF() {
@@ -5064,17 +5075,17 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   }
   function fileBase() {
     var c = current(), nm = (c.name || "agent").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "agent";
-    return nm + (viewing.example !== null ? "-example" : "") + "-boundary-report-" + new Date().toISOString().slice(0, 10);
+    return nm + (viewing.example !== null ? "-example" : "") + (reportMode() === "summary" ? "-boundary-summary-" : "-boundary-report-") + new Date().toISOString().slice(0, 10);
   }
   function exportNote(t) { var n = document.getElementById("exportNote"); if (n) n.textContent = t; }
   function setExport(on) { ["mdBtn", "pdfBtn"].forEach(function (id) { var b = document.getElementById(id); if (b) b.hidden = !on; }); }
   function doExport(kind) {
     if (!DL) return;
-    var label = kind === "pdf" ? "PDF" : "Markdown file", md = reportMarkdown(), c = current();
+    var mode = reportMode(), label = (mode === "summary" ? "summary " : "full report ") + (kind === "pdf" ? "PDF" : "Markdown file"), md = mode === "summary" ? summaryMarkdown() : reportMarkdown(), c = current();
     exportNote("Preparing the " + label + "…");
-    var data = kind === "md" ? Promise.resolve(md) : loadJsPDF().then(function (J) { return buildPdf(J, md, c.name || "Your agent"); });
+    var data = kind === "md" ? Promise.resolve(md) : loadJsPDF().then(function (J) { return buildPdf(J, md, c.name || "Your agent", mode); });
     data.then(function (d) { return DL.save({ filename: fileBase() + "." + kind, data: d }); }).then(function () {
-      exportNote(label + " saved.");
+      exportNote(label.charAt(0).toUpperCase() + label.slice(1) + " saved.");
     }, function (e) {
       var code = e && e.code;
       if (code === "declined") exportNote("Download cancelled.");
@@ -5085,7 +5096,195 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       else { setExport(false); exportNote("Downloads aren't available in this view. Use Copy summary instead."); }
     });
   }
-  window.__tmExport = { markdown: reportMarkdown, pdf: buildPdf };
+  /* ---------- Summary report: one or two pages for people the report is forwarded to ----------
+     Injected by tools/build_index.py inside the app's closure, so it uses the app's own helpers.
+     Main findings say what's wrong or unknown; top actions say what to do and point to a finding
+     by number, never repeating its headline. Top actions use the app's existing ranking (see
+     topActions). The full report stays the source of every detail. */
+  var SUM_GUIDE = "https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md", SUM_REGISTER = "https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/evidence.md";
+  var SUM_FULL = "Download the full report from the app for the details of every finding.";
+
+  // The top actions: the main action of each finding, in the existing risk order (route step first,
+  // then unauthorized access, sensitive information, exposure, control weakness). A finding without
+  // an action is skipped rather than leaving a gap, and the list is never padded.
+  function topActions(risk, s, a) {
+    var out = [];
+    for (var i = 0; i < risk.length && out.length < 3; i++) if (actsFor(risk[i].te, s, a)[0]) out.push(risk[i]);
+    return out;
+  }
+  function reportMode() {
+    var r = document.querySelector('input[name="rmode"]:checked');
+    return r && r.value === "full" ? "full" : "summary";
+  }
+  function sumData() {
+    var c = current(), s = c.s, a = c.a, E = evalAll(s, a), split = splitRisk(E.risk);
+    var findings = split.main.map(function (x) { return x.te; }).concat(E.findTh);
+    return {
+      c: c, s: s, a: a, E: E, res: evaluate(s, a), findings: findings,
+      acts: topActions(E.risk, s, a).map(function (x) { return { x: x, ac: actsFor(x.te, s, a)[0], f: findings.indexOf(x.te) + 1 }; }),
+      other: split.other.length, un: unansweredList(s, a).length, held: E.held.length
+    };
+  }
+  function sumStatus(te, s) { return te.worst ? lbl(te.worst.st, s) : "Not answered"; }
+  function sumIds(te) { return te.vis.map(function (q) { return dispId(q); }).join(", "); }
+  function sumHow(r, s) {
+    var rt = routeText(r, s);
+    if (r.label === "none") return rt;
+    // The step list already names interrupted steps; the explanation adds something only for possible or incomplete routes.
+    var extra = rt && (r.label === "potential" || r.label === "incomplete") ? ". " + rt : "";
+    return r.steps.map(function (x) { return x.name + ": " + STEPLBL[x.state].toLowerCase() + " (" + x.ids.map(function (q) { return q === "sens" ? "profile" : dispId(q); }).join(", ") + ")"; }).join(" → ") + extra;
+  }
+  function sumWhy(x) { var w = x.p.why.join("; "); return "Why first: " + w + "."; }
+  function sumFix(t) { return t.f ? "Fixes F" + t.f + "." : "Fixes: " + endDot(headOf(t.x.te, current().a)); }
+  function sumCounts(D) {
+    var p = [];
+    if (D.other) p.push(D.other + " other gap" + (D.other === 1 ? "" : "s"));
+    if (D.un) p.push(D.un + " unanswered question" + (D.un === 1 ? "" : "s"));
+    if (D.held) p.push(D.held + " theme" + (D.held === 1 ? "" : "s") + " reported as enforced outside the model (not verified)");
+    return p.length ? "Also: " + p.join(" · ") + ". The full report has the details." : "";
+  }
+  function sumEmpty(D) {
+    return "No weak or unknown answers." + (D.held ? " " + D.held + " theme" + (D.held === 1 ? "" : "s") + " reported as enforced outside the model (not verified)." : "");
+  }
+
+  function summaryMarkdown() {
+    var D = sumData(), s = D.s, out = [];
+    out.push("# Boundary summary: " + (D.c.name || "Your agent") + (viewing.example !== null ? " (illustrative example)" : ""));
+    out.push("", profileLine(s), "", "_Generated " + new Date().toISOString().slice(0, 10) + " with Agent Boundary Map. Answers are self-reported, and “reported as enforced” hasn't been verified. This is the summary: " + SUM_FULL.charAt(0).toLowerCase() + SUM_FULL.slice(1) + "_");
+    out.push("", "## Verdict", "", verdictText(D.E.R));
+    out.push("", "## Routes", "", "| Route | Status | Where it runs |", "| --- | --- | --- |");
+    D.E.R.forEach(function (r) { out.push("| " + r.name + " | " + RLABEL[r.label] + " | " + mdEsc(sumHow(r, s)) + " |"); });
+    if (!D.findings.length) out.push("", "## Findings", "", sumEmpty(D));
+    else {
+      out.push("", "## Main findings", "", "What's wrong or not known.", "");
+      D.findings.forEach(function (te, i) { out.push("- **F" + (i + 1) + ".** " + endDot(headOf(te, D.a)) + " _" + sumStatus(te, s) + "_ · " + sumIds(te)); });
+    }
+    if (D.acts.length) {
+      out.push("", "## Top actions", "", "What to do first.", "");
+      D.acts.forEach(function (t, i) {
+        var p = actParts(fillT(t.ac.t, s));
+        out.push((i + 1) + ". " + p.lead + (t.ac.tags && t.ac.tags.length ? " _[" + t.ac.tags.join(", ") + "]_" : ""));
+        out.push("   " + sumWhy(t.x) + " " + sumFix(t));
+        if (showOwners(s) && t.ac.own) out.push("   " + ownerLine(t.ac, s));
+      });
+    }
+    var cn = sumCounts(D); if (cn && D.findings.length) out.push("", cn);
+    out.push("", "## Boundaries", ""); D.res.forEach(function (r) { out.push("- **" + r.b.name + ":** " + (r.status ? boxCount(r).text + "; weakest: " + LBL[r.status].toLowerCase() : "not answered")); });
+    out.push("", "---", "", "Evidence behind these questions: [why we ask them](" + SUM_GUIDE + ") · [evidence register](" + SUM_REGISTER + ").", "", "The rule behind every question: the model may propose, but something outside the model must authorize.");
+    return out.join("\n") + "\n";
+  }
+
+  // The summary laid out as page content, for the PDF renderer (never shown on screen).
+  var MINI_CSS = [
+    "#v-sum { display: flex; flex-direction: column; gap: 14px; }",
+    "#v-sum h2 { font-size: 1.5rem; margin: 2px 0 0; }",
+    "#v-sum .sh { font-family: var(--display); font-size: 1.1rem; font-weight: 600; margin: 0 0 8px; }",
+    "#v-sum p { margin: 0; }",
+    "#v-sum .sub { color: var(--fg2); margin-top: 4px; }",
+    "#v-sum table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 10px; }",
+    "#v-sum th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; padding: 0 8px 6px 0; }",
+    "#v-sum td { text-align: left; vertical-align: top; padding: 7px 8px 7px 0; border-top: 1px solid var(--border); }",
+    "#v-sum td.rn { font-weight: 600; white-space: nowrap; }",
+    "#v-sum td.rs { white-space: nowrap; }",
+    "#v-sum td.rw { color: var(--fg2); }",
+    "#v-sum ol, #v-sum ul { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }",
+    "#v-sum li { font-size: 0.88rem; display: flex; gap: 8px; align-items: baseline; }",
+    "#v-sum .fid { font-family: var(--mono); font-size: 0.76rem; color: var(--muted); min-width: 28px; }",
+    "#v-sum .fb { flex: 1; min-width: 0; }",
+    "#v-sum .fq { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin-left: 6px; }",
+    "#v-sum .fb .chip { margin-left: 6px; }",
+    "#v-sum .am { display: block; font-size: 0.8rem; color: var(--fg2); margin-top: 3px; }",
+    "#v-sum .tagt { font-size: 0.72rem; color: var(--muted); margin-left: 6px; }",
+    "#v-sum .counts { font-size: 0.84rem; color: var(--fg2); }",
+    "#v-sum .note a { color: var(--accent); }",
+    "@media (max-width: 680px) { #v-sum table, #v-sum tbody, #v-sum tr, #v-sum td { display: block; } #v-sum tr:first-child { display: none; } #v-sum td { border-top: 0; padding: 2px 0; } #v-sum tr { border-top: 1px solid var(--border); padding: 8px 0; } #v-sum td.rn, #v-sum td.rs { white-space: normal; } }",
+    "#v-map.sumv > .wrap > :not(.banner):not(#mapHeadCard):not(#copyCard):not(#sumView) { display: none !important; }",
+    "#v-map:not(.sumv) #sumView { display: none; }"
+  ].join("\n");
+  // On screen too: the summary view uses the same styles as the PDF (the PDF copies the page's styles).
+  (function () { var st = document.createElement("style"); st.textContent = MINI_CSS; document.head.appendChild(st); })();
+
+  // The Summary | Full switch changes what's on screen; the downloads follow it and say which they give.
+  function applyView() {
+    var m = reportMode(), vm = document.getElementById("v-map"), sv = document.getElementById("sumView");
+    vm.classList.toggle("sumv", m === "summary");
+    sv.innerHTML = ""; if (m === "summary") sv.appendChild(miniDom(true));
+    var w = m === "summary" ? "summary" : "full";
+    document.getElementById("mdBtn").textContent = "Download " + w + " Markdown";
+    document.getElementById("pdfBtn").textContent = "Download " + w + " PDF";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="rmode"]'), function (r) { r.addEventListener("change", applyView); });
+
+  // screen: the in-page summary view, under the page's own header (no header card; the phone
+  // layout gets the stacked map). Otherwise the PDF version, with its own header card.
+  function miniDom(screen) {
+    var D = sumData(), s = D.s, a = D.a;
+    var sec = el("section"); sec.id = "v-sum";
+    var head = el("div", "card");
+    head.appendChild(el("span", "eyebrow", "Boundary summary" + (viewing.example !== null ? " · illustrative example" : "")));
+    head.appendChild(el("h2", null, D.c.name || "Your agent"));
+    head.appendChild(el("p", "sub", profileLine(s)));
+    head.appendChild(el("p", "note", "Generated " + new Date().toISOString().slice(0, 10) + ". Answers are self-reported, and “reported as enforced” hasn't been verified. " + SUM_FULL));
+    if (!screen) sec.appendChild(head);
+
+    var v = el("div", "card");
+    v.appendChild(el("p", "sh", "Verdict"));
+    v.appendChild(el("p", "verdict-line", verdictText(D.E.R)));
+    var tb = el("table"), tr = el("tr");
+    ["Route", "Status", "Where it runs"].forEach(function (h) { tr.appendChild(el("th", null, h)); }); tb.appendChild(tr);
+    D.E.R.forEach(function (r) {
+      var row = el("tr"); row.appendChild(el("td", "rn", r.name));
+      var st = el("td", "rs"); var ch = el("span", "chip c-" + ({ supported: "open", potential: "model", incomplete: "model", interrupted: "held", none: "unknown" }[r.label] || "unknown"), RLABEL[r.label]); st.appendChild(ch); row.appendChild(st);
+      row.appendChild(el("td", "rw", sumHow(r, s))); tb.appendChild(row);
+    });
+    v.appendChild(tb); sec.appendChild(v);
+
+    var f = el("div", "card");
+    if (!D.findings.length) { f.appendChild(el("p", "sh", "Findings")); f.appendChild(el("p", null, sumEmpty(D))); }
+    else {
+      f.appendChild(el("p", "sh", "Main findings: what's wrong or not known"));
+      var ol = el("ol");
+      D.findings.forEach(function (te, i) {
+        var li = el("li"); li.appendChild(el("span", "fid", "F" + (i + 1)));
+        var b = el("span", "fb"); b.appendChild(document.createTextNode(endDot(headOf(te, a))));
+        if (te.worst) b.appendChild(rchip(te.worst.st, s)); b.appendChild(el("span", "fq", sumIds(te)));
+        li.appendChild(b); ol.appendChild(li);
+      });
+      f.appendChild(ol);
+      var cn = sumCounts(D); if (cn) { var cp = el("p", "counts", cn); cp.style.marginTop = "10px"; f.appendChild(cp); }
+    }
+    sec.appendChild(f);
+
+    if (D.acts.length) {
+      var t = el("div", "card"); t.appendChild(el("p", "sh", "Top actions: what to do first"));
+      var al = el("ol");
+      D.acts.forEach(function (x, i) {
+        var li = el("li"); li.appendChild(el("span", "fid", (i + 1) + "."));
+        var b = el("span", "fb"), p = actParts(fillT(x.ac.t, s));
+        b.appendChild(document.createTextNode(p.lead));
+        if (x.ac.tags && x.ac.tags.length) b.appendChild(el("span", "tagt", "[" + x.ac.tags.join(", ") + "]"));
+        b.appendChild(el("span", "am", sumWhy(x.x) + " " + sumFix(x)));
+        if (showOwners(s) && x.ac.own) b.appendChild(el("span", "am", ownerLine(x.ac, s)));
+        li.appendChild(b); al.appendChild(li);
+      });
+      t.appendChild(al); sec.appendChild(t);
+    }
+
+    var m = el("div", "card");
+    m.appendChild(el("p", "sh", "Boundary map"));
+    var lg = el("div", "legend"); lg.style.margin = "0 0 6px"; drawLegend(lg); m.appendChild(lg);
+    var mw = el("div", "mapwrap"), ms = el("div"); mw.appendChild(ms); drawMap(ms, D.res); m.appendChild(mw);
+    if (screen) { var sk = el("div", "stack-map"); drawStack(sk, D.res); m.appendChild(sk); }
+    sec.appendChild(m);
+
+    var ft = el("p", "note"), ev = function (href, text) { var x = el("a", null, text + " ↗"); x.href = href; x.target = "_blank"; x.rel = "noopener"; x.setAttribute("aria-label", text + " (opens in a new tab)"); return x; };
+    ft.appendChild(document.createTextNode("Evidence behind these questions: ")); ft.appendChild(ev(SUM_GUIDE, "why we ask them"));
+    ft.appendChild(document.createTextNode(" · ")); ft.appendChild(ev(SUM_REGISTER, "evidence register")); ft.appendChild(document.createTextNode("."));
+    sec.appendChild(ft);
+    sec.appendChild(el("p", "note", "The rule behind every question: the model may propose, but something outside the model must authorize."));
+    return sec;
+  }
+  window.__tmExport = { markdown: reportMarkdown, summary: summaryMarkdown, pdf: buildPdf };
 
   /* ---------- example profiles (fixed, illustrative) ---------- */
   var PROFILES = [
@@ -5150,7 +5349,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   document.getElementById("toMapBtn").addEventListener("click", function () { viewing.example = null; go("map"); });
   document.getElementById("editBtn").addEventListener("click", function () { state.step = 0; go("quiz"); });
   document.getElementById("copyBtn").addEventListener("click", function () {
-    var t = summaryText(), card = document.getElementById("copyCard"), box = document.getElementById("copyBox"), note = document.getElementById("copyNote");
+    var t = summaryMarkdown(), card = document.getElementById("copyCard"), box = document.getElementById("copyBox"), note = document.getElementById("copyNote");
     box.value = t; card.hidden = false;
     var fallback = function () { box.focus(); box.select(); note.textContent = "Selected. Copy it from the box."; };
     try { navigator.clipboard.writeText(t).then(function () { note.textContent = "Copied to the clipboard."; }, fallback); } catch (e) { fallback(); }
