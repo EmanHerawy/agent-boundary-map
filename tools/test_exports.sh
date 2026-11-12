@@ -32,6 +32,24 @@ print(sum(1 for h in heads if re.sub(r'\s+',' ',h) not in txt))" "$OUT/heads.jso
   overlaps=$(python3 -I "$HERE/overlap.py" "$OUT/$slug.bbox.html" | awk -F': ' '/overlapping/{print $2}')
   [ "${missing:-1}" = "0" ] && [ "${overlaps:-1}" = "0" ] && [ -n "$pages" ] || fail=1
   echo "$name | pdf ${ms}ms, $pages pages | headlines missing: $missing | overlapping words: $overlaps | markdown $md chars"
+  # Summary report: at most 2 pages, every main finding in the PDF, no overlaps, and the top
+  # actions never repeat a finding's headline.
+  $B js "(async()=>{const buf=await window.__tmExport.pdf(window.jspdf.jsPDF,'',document.getElementById('mapTitle').textContent,'summary'); const u=new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i+=32768){s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));} return 'B64='+btoa(s);})()" > "$OUT/raw.txt" 2>&1
+  grep -o 'B64=[A-Za-z0-9+/=]*' "$OUT/raw.txt" | sed 's/^B64=//' | base64 -d > "$OUT/$slug.summary.pdf"
+  $B js "window.__tmExport.summary()" 2>&1 | grep -v -- '---' > "$OUT/$slug.summary.md"
+  spages=$(pdfinfo "$OUT/$slug.summary.pdf" 2>/dev/null | awk '/^Pages/{print $2}')
+  pdftotext "$OUT/$slug.summary.pdf" "$OUT/$slug.summary.txt" 2>/dev/null
+  scheck=$(python3 -I -c "
+import re,sys
+md=open(sys.argv[1]).read(); txt=re.sub(r'\s+',' ',open(sys.argv[2]).read())
+heads=[re.sub(r'\s+',' ',h) for h in re.findall(r'^- \*\*F\d+\.\*\* (.+?) _', md, re.M)]
+acts=md.split('## Top actions')[1].split('\n## ')[0] if '## Top actions' in md else ''
+print(sum(1 for h in heads if h not in txt), sum(1 for h in heads if h.rstrip('.') in acts))" "$OUT/$slug.summary.md" "$OUT/$slug.summary.txt")
+  smissing=${scheck% *}; srepeat=${scheck#* }
+  pdftotext -bbox "$OUT/$slug.summary.pdf" "$OUT/$slug.summary.bbox.html" 2>/dev/null
+  soverlaps=$(python3 -I "$HERE/overlap.py" "$OUT/$slug.summary.bbox.html" | awk -F': ' '/overlapping/{print $2}')
+  [ -n "$spages" ] && [ "$spages" -le 2 ] && [ "${smissing:-1}" = "0" ] && [ "${srepeat:-1}" = "0" ] && [ "${soverlaps:-1}" = "0" ] || fail=1
+  echo "  summary | $spages pages | findings missing: $smissing | repeated in actions: $srepeat | overlapping words: $soverlaps"
   $B js "document.getElementById('backIntroBtn').click()" >/dev/null 2>&1
 done
 errs=$($B console --errors 2>&1 | grep -v -- '---')

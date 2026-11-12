@@ -7,9 +7,11 @@ Usage: python3 -I tools/build_index.py src/v20-export.html <fonts.json> <jspdf.u
   Content-Security-Policy that blocks network access.
 - Replaces the text-only PDF with one drawn from the rendered report.
 - Adds a browser download path when the page runs outside claude.ai.
+- Links the evidence docs, and adds the summary report (tools/mini_report.js, read from
+  this script's folder) with a Summary | Full switch for the downloads.
 Each replacement asserts how many times it applies, so a changed source fails loudly.
 """
-import json, re, sys
+import json, os, re, sys
 
 src, fonts_path, jspdf_path, render_path, out = sys.argv[1:6]
 html = open(src, encoding="utf-8").read()
@@ -150,6 +152,46 @@ sub("""  try { if (window.claude && typeof window.claude.use === "function") win
     if (window.claude && typeof window.claude.use === "function") window.claude.use("downloads").then(function (d) { if (d) { DL = d; setExport(true); } else useBlobDownloads(); }, useBlobDownloads);
     else useBlobDownloads();
   } catch (e) { useBlobDownloads(); }""")
+
+# 7b. Summary report (tools/mini_report.js): a "Report: Summary | Full" switch that changes what's
+#     on screen, opening on Summary; the downloads follow it and their labels say which they give.
+#     "Copy summary" always copies the summary. One topActions() picks the
+#     top actions everywhere (same ranking as before, but a finding without an action no longer
+#     leaves a gap), so the screen, the full report and the summary always agree.
+mini = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "mini_report.js"), encoding="utf-8").read()
+mini = mini.replace("__GUIDE__", GUIDE).replace("__REGISTER__", REGISTER)
+sub("  window.__tmExport = { markdown: reportMarkdown, pdf: buildPdf };\n",
+    mini + "  window.__tmExport = { markdown: reportMarkdown, summary: summaryMarkdown, pdf: buildPdf };\n")
+sub("    if (ranked.length) {\n", "    if (topActions(ranked, s, a).length) {\n")
+sub("ranked.slice(0, 3).forEach", "topActions(ranked, s, a).forEach")
+sub('    if (E.risk.length) {\n      out.push("", "## Top actions", "");\n      E.risk.slice(0, 3).forEach',
+    '    if (topActions(E.risk, s, a).length) {\n      out.push("", "## Top actions", "");\n      topActions(E.risk, s, a).forEach')
+sub('if (E.risk.length) { out.push("", "TOP ACTIONS"); E.risk.slice(0, 3).forEach',
+    'if (topActions(E.risk, s, a).length) { out.push("", "TOP ACTIONS"); topActions(E.risk, s, a).forEach')
+sub("""          <div class="btnrow">\n            <button class="btn" type="button" id="editBtn">""",
+    """          <div class="btnrow">\n"""
+    """            <fieldset class="seg" id="reportMode"><legend>Report</legend>"""
+    """<label><input type="radio" name="rmode" value="summary" checked> Summary</label>"""
+    """<label><input type="radio" name="rmode" value="full"> Full</label></fieldset>\n"""
+    """            <button class="btn" type="button" id="editBtn">""")
+sub("""      <div class="card">\n        <div class="maphead">""", """      <div class="card" id="mapHeadCard">\n        <div class="maphead">""")
+sub("""      <div class="card summary" id="summary"></div>\n""", """      <div id="sumView"></div>\n      <div class="card summary" id="summary"></div>\n""")
+sub("""    document.getElementById("copyCard").hidden = true;\n    exportNote("");\n  }\n""",
+    """    document.getElementById("copyCard").hidden = true;\n    exportNote("");\n    applyView();\n  }\n""")
+sub("@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n",
+    "@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n"
+    ".seg { display: inline-flex; align-items: center; border: 0; margin: 0 10px 0 0; padding: 0; min-width: 0; }\n"
+    ".seg legend { float: left; padding: 0; margin-right: 12px; font-size: 0.8rem; color: var(--muted); }\n"
+    ".seg label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 0.88rem; cursor: pointer; }\n"
+    ".seg label + label { margin-left: 16px; }\n"
+    ".seg input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer; }\n"
+    ".seg label:has(input:checked) { font-weight: 600; }\n")
+sub('var label = kind === "pdf" ? "PDF" : "Markdown file", md = reportMarkdown(), c = current();',
+    'var mode = reportMode(), label = (mode === "summary" ? "summary " : "full report ") + (kind === "pdf" ? "PDF" : "Markdown file"), md = mode === "summary" ? summaryMarkdown() : reportMarkdown(), c = current();')
+sub('buildPdf(J, md, c.name || "Your agent")', 'buildPdf(J, md, c.name || "Your agent", mode)')
+sub('exportNote(label + " saved.");', 'exportNote(label.charAt(0).toUpperCase() + label.slice(1) + " saved.");')
+sub('"-boundary-report-"', '(reportMode() === "summary" ? "-boundary-summary-" : "-boundary-report-")')
+sub("var t = summaryText(),", "var t = summaryMarkdown(),")
 
 left = [m.start() for m in re.finditer(r"(?i)trust map|trust report", html)]
 leftover = [html[i - 30:i + 40] for i in left if "agent-trust-map-v" not in html[i - 30:i + 40]]
