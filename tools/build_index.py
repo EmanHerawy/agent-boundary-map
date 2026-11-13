@@ -25,6 +25,63 @@ def sub(old, new, count=1):
     html = html.replace(old, new)
 
 
+# 0. Harness corrections (src/harness-corrections.json, made by tools/make_corrections.py from
+#    the verified harness-claims-mapping.md). Applied to the question data before anything else.
+#    Options are never removed (saved answers store their position); a wrong option is only
+#    offered to the harnesses where it holds. Every target text must match exactly once.
+def apply_corrections():
+    global html
+    corr = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "harness-corrections.json"), encoding="utf-8"))
+    i = html.index("var D = {"); k = html.index("{", i); depth = 0
+    for p in range(k, len(html)):
+        if html[p] == "{": depth += 1
+        elif html[p] == "}":
+            depth -= 1
+            if depth == 0: end = p + 1; break
+    data = json.loads(html[k:end]); qs = {q["id"]: q for q in data["qs"]}
+    # Corrected values are written on one line, next to the text they apply to, so each
+    # correction reads as a single line in `git diff index.html`. Untouched entries keep
+    # their original layout.
+    compact = {}
+    def one_line(v):
+        key = "__ONE_LINE_%d__" % len(compact); compact[key] = json.dumps(v, ensure_ascii=False); return key
+    for c in corr["options"]:
+        q = qs[c["q"]]
+        hits = [n for n, o in enumerate(q["a"]) if o["t"] == c["text"]]
+        if len(hits) != 1: sys.exit(f"correction: option not found once in {c['q']}: {c['text'][:60]!r}")
+        o = q["a"][hits[0]]
+        rest = {kk: vv for kk, vv in o.items() if kk not in ("t", "hs")}
+        first = [("t", c.get("new_text") or o["t"])]
+        if c.get("hs") is not None: first.append(("hs", one_line(c["hs"])))
+        elif "hs" in o: first.append(("hs", o["hs"]))
+        q["a"][hits[0]] = dict(first + list(rest.items()))
+    for c in corr["notes"]:
+        if qs[c["q"]].get("hn") != c["old"]: sys.exit(f"correction: note in {c['q']} has changed")
+        qs[c["q"]]["hn"] = c["new"]
+    for c in corr["where_to_check"]:
+        wc = qs[c["q"]].setdefault("wc", {})
+        if wc.get(c["harness"]) != c["old"]: sys.exit(f"correction: where-to-check {c['q']}/{c['harness']} isn't as expected")
+        wc[c["harness"]] = one_line({"t": c["text"], "src": c["sources"]})
+    text = json.dumps(data, ensure_ascii=False, indent=1)
+    for key, val in compact.items():
+        if text.count('"%s"' % key) != 1: sys.exit("correction: one-line placeholder lost")
+        text = text.replace('"%s"' % key, val)
+    html = html[:k] + text + html[end:]
+    for c in corr.get("findings", []):  # finding texts (in THEMES), replaced an exact number of times
+        if html.count(c["old"]) != c["count"]: sys.exit(f"correction: finding text found {html.count(c['old'])} times, expected {c['count']}: {c['old'][:60]!r}")
+        html = html.replace(c["old"], c["new"])
+
+
+apply_corrections()
+# A "Where to check" entry can now carry its sources: show them as links under the text.
+sub('wc.appendChild(el("p", null, q.wc[s.built]));',
+    '(function (w) { wc.appendChild(el("p", null, typeof w === "string" ? w : w.t)); if (w && w.src && w.src.length) {'
+    ' var sp = el("p", "wcsrc"); sp.appendChild(document.createTextNode("Source" + (w.src.length > 1 ? "s" : "") + ": "));'
+    ' w.src.forEach(function (u, n) { if (n) sp.appendChild(document.createTextNode(" \\u00B7 ")); var a = el("a", null, u.replace(/^https?:\\/\\//, ""));'
+    ' a.href = u; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Source: " + u + " (opens in a new tab)"); sp.appendChild(a); });'
+    ' wc.appendChild(sp); } })(q.wc[s.built]);')
+
+
 CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
        "img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; "
        "base-uri 'none'; form-action 'none'")
@@ -90,7 +147,7 @@ def a(href, text, label):
     return f'<a href="{href}" target="_blank" rel="noopener" aria-label="{label}{NEW_TAB}">{text} ↗</a>'
 
 
-LINKS = ".hero li a, .note a, #qDesc a"
+LINKS = ".hero li a, .note a, #qDesc a, .wcsrc a"
 sub("@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n</style>",
     "@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n"
     f"{LINKS} {{ color: var(--accent); }}\n"
@@ -180,6 +237,7 @@ sub("""    document.getElementById("copyCard").hidden = true;\n    exportNote(""
     """    document.getElementById("copyCard").hidden = true;\n    exportNote("");\n    applyView();\n  }\n""")
 sub("@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n",
     "@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .12s; } }\n"
+    ".wcsrc { font-size: 0.76rem; color: var(--muted); margin: 4px 0 0; overflow-wrap: anywhere; }\n"
     ".seg { display: inline-flex; align-items: center; border: 0; margin: 0 10px 0 0; padding: 0; min-width: 0; }\n"
     ".seg legend { float: left; padding: 0; margin-right: 12px; font-size: 0.8rem; color: var(--muted); }\n"
     ".seg label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: 0.88rem; cursor: pointer; }\n"
