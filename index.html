@@ -124,6 +124,13 @@ button:focus-visible, input:focus-visible, label:focus-within { outline: 2px sol
 .navrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
 .navrow .hint { font-size: 0.82rem; color: var(--muted); }
 .bdesc { color: var(--fg2); margin: 2px 0 0; max-width: 70ch; }
+.qguidance { margin: 10px 0 0; padding: 9px 12px; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; background: color-mix(in srgb, var(--accent) 7%, var(--surface)); color: var(--fg2); font-size: .82rem; max-width: 78ch; }
+.qprogress { display: flex; align-items: center; gap: 12px; margin-top: 12px; color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
+.qprogress-track { height: 6px; flex: 1; max-width: 260px; overflow: hidden; border-radius: 99px; background: var(--border); }
+.qprogress-track span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--accent); transition: width .18s ease; }
+.opt .odesc { line-height: 1.4; }
+.opt:has(input:checked) { box-shadow: inset 3px 0 0 var(--accent); }
+@media (max-width: 600px) { .card { padding: 16px; } .qlist { gap: 20px; } .opt { padding: 10px 11px; } .stepnav { gap: 5px; } .stepnav button { padding: 6px 9px; } }
 
 /* report */
 .maphead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
@@ -295,6 +302,17 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
 .seg label + label { margin-left: 16px; }
 .seg input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer; }
 .seg label:has(input:checked) { font-weight: 600; }
+.hero { grid-template-areas: "top side" "ex side"; align-items: start; row-gap: 18px; }
+.h-top { grid-area: top; min-width: 0; } .h-side { grid-area: side; min-width: 0; display: flex; flex-direction: column; gap: 16px; } .h-ex { grid-area: ex; min-width: 0; }
+@media (max-width: 760px) { .hero { grid-template-areas: "top" "side" "ex"; } }
+.hero .lead { margin-bottom: 16px; }
+.h-len { margin-top: 8px; }
+.hero .trust { list-style: none; margin: 16px 0 0; padding: 12px 14px; display: grid; gap: 8px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 9px; background: var(--sunken); font-size: 0.9rem; }
+.hero .trust li { margin: 0; }
+.hero .trust strong, .hero .steps strong { color: var(--fg); font-weight: 600; }
+.hero .steps { list-style: none; counter-reset: st; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; color: var(--fg2); }
+.hero .steps li { counter-increment: st; margin: 0; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
+.hero .steps li::before { content: counter(st); width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-weight: 600; font-size: 0.85rem; }
 .hero li a, .note a, #qDesc a, .wcsrc a { color: var(--accent); }
 .hero li a:visited, .note a:visited, #qDesc a:visited, .wcsrc a:visited { color: color-mix(in srgb, var(--accent) 60%, var(--muted)); }
 </style>
@@ -302,27 +320,37 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
 <div class="wrap" id="app">
 
   <section id="v-intro" class="card hero">
-    <div>
+    <div class="h-top">
       <span class="eyebrow">Agent Boundary Map</span>
       <h1>See where your agent puts its trust</h1>
-      <p class="lead">For teams that build or configure an agent, on their own code or on a harness such as Claude Code or Codex. Answer questions about how it works, and get a report of every trust boundary: who holds it (you, the harness, a service or a person), and whether it holds outside the model or only while the model behaves.</p>
-      <ul>
-        <li>You only see steps for the parts your agent has. Each answer is read for the least protected route.</li>
-        <li>The report opens with the routes untrusted input could take: can one injected message make the agent read sensitive information and send it out, or change things?</li>
-        <li>No evidence to upload. "Don't know" is a fine answer; it shows you what to find out.</li>
-        <li>Your answers stay in this browser. The page makes no network requests, and its security policy blocks them.</li>
-        <li>Why each question is here: <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="the evidence (opens in a new tab)">the evidence ↗</a>, from real incidents, research and security standards.</li>
-      </ul>
+      <p class="lead">For teams that build or configure AI agents—whether in your own code or on a harness such as Claude Code or Codex. Map each trust boundary: what enforces it, and whether that enforcement is independent of the model’s instructions and decisions.</p>
       <div class="btnrow">
-        <button class="btn primary" type="button" id="startBtn">Map my agent</button>
+        <button class="btn primary" type="button" id="startBtn">Start assessment</button>
         <button class="btn" type="button" id="resumeBtn" hidden>Continue where you left off</button>
       </div>
       <p class="note" id="oldNote" hidden style="margin-top:10px">The questions changed, so answers saved from the earlier version were cleared.</p>
-      <div class="exintro"><span class="eyebrow">Example reports</span><p class="note">Fixed, illustrative assessments: not certifications or evidence about real deployments. Opening one doesn't change your own answers.</p><div class="exlist2" id="exList"></div></div>
+      <ul class="trust">
+        <li><strong>Nothing to upload.</strong> You describe your setup by answering questions: no code, configuration or logs.</li>
+        <li><strong>Your answers stay in this browser.</strong> The page makes no network requests, and its security policy blocks them.</li>
+        <li><strong>Why each question is here:</strong> <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="the evidence (opens in a new tab)">the evidence ↗</a>, from real incidents, research and security standards.</li>
+      </ul>
     </div>
-    <div class="mini" aria-label="Example boundary map">
-      <div id="introMap"></div>
-      <p>Example map: a repo maintenance agent configured on Codex.</p>
+    <div class="h-side">
+      <div>
+        <span class="eyebrow">How it works</span>
+        <ol class="steps">
+          <li><span><strong>Describe your agent.</strong> What runs it, and which parts it has: tools, memory, MCP servers and more. You only get questions about those parts.</span></li>
+          <li><span><strong>Answer how each boundary holds.</strong> Answer for the least-protected route. If you cannot verify a control, choose “Don’t know”: the report will show what to investigate.</span></li>
+          <li><span><strong>Get your report.</strong> It opens with the routes untrusted input could take: could one injected message make the agent read sensitive information and send it out, or change things? Then each finding, with what to do. Save it as a PDF or Markdown, in summary or in full.</span></li>
+        </ol>
+      </div>
+      <div class="mini" aria-label="Example boundary map">
+        <div id="introMap"></div>
+        <p>Example map: a repo maintenance agent configured on Codex.</p>
+      </div>
+    </div>
+    <div class="h-ex">
+      <div class="exintro" style="margin-top:0"><span class="eyebrow">Example reports</span><p class="note">Fixed, illustrative assessments: not certifications or evidence about real deployments. Opening one doesn't change your own answers.</p><div class="exlist2" id="exList"></div></div>
     </div>
   </section>
 
@@ -333,6 +361,8 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     </div>
     <h2 id="qTitle"></h2>
     <p class="bdesc" id="qDesc"></p>
+    <p class="qguidance" id="qGuidance" hidden>Choose the answer that matches the <strong>least-protected route</strong> today. Options describe the effective control, not just the product or mechanism you use. If you cannot verify how it is enforced, choose <strong>Don’t know</strong>.</p>
+    <div class="qprogress" id="qProgress" aria-label="Section progress" hidden><div class="qprogress-track"><span id="qProgressFill"></span></div><span id="qProgressText"></span></div>
     <nav class="stepnav" id="qSteps" aria-label="Jump to a step"></nav>
     <div class="qlist" id="qList"></div>
     <div class="navrow">
@@ -346,7 +376,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     <div class="wrap" style="gap:16px">
       <div class="banner" id="exampleBanner" hidden>
         <span><strong>Example report.</strong> <span id="exName"></span> Illustrative, not about your system.</span>
-        <span class="btnrow"><button class="btn" type="button" id="backIntroBtn">All examples</button><button class="btn primary" type="button" id="ownBtn">Map my own agent</button></span>
+        <span class="btnrow"><button class="btn" type="button" id="backIntroBtn">All examples</button><button class="btn primary" type="button" id="ownBtn">Start assessment</button></span>
       </div>
       <div class="card" id="mapHeadCard">
         <div class="maphead">
@@ -1691,7 +1721,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   {
    "id": "p3",
    "step": "mcp",
-   "title": "What makes sure a third-party MCP server still runs the version you approved?",
+   "title": "How are changes to third-party MCP servers detected and reviewed before updated versions are used?",
    "desc": "Local servers run from a package on your machine; remote servers run on someone else's infrastructure. If you use both, answer for the least protected one.",
    "cond": "shown for official and community servers",
    "a": [
@@ -2050,7 +2080,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   {
    "id": "k5",
    "step": "skills",
-   "title": "Can a skill or plugin bypass or weaken the agent's approval and authorization checks?",
+   "title": "Can a skill or plugin change the agent’s permissions or bypass existing approval requirements?",
    "desc": "For example: a skill's metadata pre-approves commands or tools while it's active, a plugin changes permission settings, or a skill tells the agent to restart in a mode that skips approvals. An item that only adds tools doesn't count here: what it adds is part of its review (K3).",
    "cond": null,
    "a": [
@@ -2431,7 +2461,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   {
    "id": "x6",
    "step": "code",
-   "title": "Can commands that skip approval run other code or send data out?",
+   "title": "Can pre-approved commands run other code or send data out?",
    "desc": "Some commands that look harmless aren't. npm test and make run whatever package.json or the Makefile says, find can -exec, git can run programs set in its config or hooks (depending on the operation), and interpreters run any code. Others reach the network: ping, nslookup, dig and curl can carry data out in what they send or look up.",
    "cond": "shown when anything runs without per-command approval: pre-approved commands, auto-approve modes, unattended runs",
    "a": [
@@ -3586,7 +3616,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   {
    "id": "o6",
    "step": "oversight",
-   "title": "Is what reaches the model provider limited to what its terms allow?",
+   "title": "Is data sent to each model provider limited to what that provider is permitted to receive?",
    "desc": "Every model the agent's data reaches counts: the main model, guard models, sub-agents on other models, embedding services and MCP servers that call their own models. \"Terms\" means retention, training use and processing location, checked against the data you send.",
    "cond": null,
    "a": [
@@ -4114,7 +4144,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       inp.addEventListener("change", function () { onPick(o.v); var again = document.getElementById("q-" + id + "-" + o.v); if (again) again.focus(); });
       lab.appendChild(inp); var sp = el("span", null, o.t);
       if (o.h) sp.appendChild(el("span", "tagline", "harness"));
-      if (o.d) sp.appendChild(el("small", "odesc", o.d));
+      if (o.d && (!o.selectedOnly || current === o.v)) sp.appendChild(el("small", "odesc", o.d));
       lab.appendChild(sp); box.appendChild(lab);
     });
     wrap.appendChild(box);
@@ -4135,7 +4165,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
         var next = cur.filter(function (x) { return x !== o.v; }); if (inp.checked) next.push(o.v);
         onChange(next); var again = document.getElementById("c-" + id + "-" + o.v); if (again) again.focus();
       });
-      lab.appendChild(inp); var sp = el("span", null, o.t); if (o.d) sp.appendChild(el("small", "odesc", o.d));
+      lab.appendChild(inp); var sp = el("span", null, o.t); if (o.d && (!o.selectedOnly || current === o.v)) sp.appendChild(el("small", "odesc", o.d));
       lab.appendChild(sp); box.appendChild(lab);
     });
     wrap.appendChild(box);
@@ -4148,6 +4178,9 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
     var s = state.shape, list = document.getElementById("qList"); list.innerHTML = "";
     var steps = document.getElementById("qSteps"); steps.innerHTML = "";
     var n = totalSteps();
+    var guidance = document.getElementById("qGuidance"), progress = document.getElementById("qProgress");
+    guidance.hidden = state.step === 0;
+    progress.hidden = state.step === 0;
     if (state.step > n - 1) state.step = n - 1;
     var allSteps = activeSteps(s), canJump = profileComplete();
     for (var i = 0; i < n; i++) (function (i) {
@@ -4160,6 +4193,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       if (i === state.step) btn.setAttribute("aria-current", "step");
       if (i && !canJump) { btn.disabled = true; btn.title = "Finish the profile first"; }
       btn.addEventListener("click", function () { if (i === state.step) return; state.step = i; renderQuiz(); try { window.scrollTo(0, 0); } catch (e) { /* not available */ } });
+      btn.setAttribute("aria-label", (sb ? sb.name : "Profile") + (sb && tot ? ", " + got + " of " + tot + " answered" : ""));
       steps.appendChild(btn);
     })(i);
     document.getElementById("toMapBtn").hidden = !(profileComplete() && Object.keys(state.ans).length);
@@ -4184,7 +4218,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       }));
       list.appendChild(radioBlock(SENS.id, SENS.q, SENS.why, q2opts(SENS.opts), s.sens, function (v) { s.sens = v; save(); renderQuiz(); }));
       var left = profileQs(s).filter(function (q) { return !s[q.id]; }).length + (s.sens ? 0 : 1);
-      document.getElementById("qHint").textContent = left ? left + " left to answer" : "Next: " + (n - 1) + " steps";
+      document.getElementById("qHint").textContent = left ? left + " required profile answers left" : "Profile complete · next: " + (n - 1) + " sections";
       document.getElementById("nextBtn").disabled = !!left;
       document.getElementById("nextBtn").textContent = "Next";
       return;
@@ -4211,7 +4245,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
         return;
       }
       var q = Q[id]; scored++; if (state.ans[id] !== undefined) answered++;
-      var opts = optionsFor(id, s).map(function (o) { return { v: o.v, t: o.t, h: o.h, d: o.s === "unknown" ? null : null }; });
+      var opts = optionsFor(id, s).map(function (o) { return { v: o.v, t: o.t, h: o.h, d: o.i || null, selectedOnly: true }; });
       var blk = radioBlock(id, q.title, fillH(q.desc, s) || null, opts, state.ans[id], function (v) { state.ans[id] = v; state.example = false; save(); renderQuiz(); }, condOf[id], dispId(id));
       if (hz(s) && q.hn) blk.insertBefore(el("p", "hnote", "On " + H(s) + ": " + fillH(q.hn, s)), blk.querySelector(".opts"));
       if (hz(s) && q.wc && q.wc[s.built]) {
@@ -4229,7 +4263,10 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       }
       list.appendChild(blk);
     });
-    document.getElementById("qHint").textContent = answered + " of " + scored + " answered" + (answered < scored ? " · you can skip" : "");
+    var pct = scored ? Math.round(answered / scored * 100) : 0;
+    document.getElementById("qProgressFill").style.width = pct + "%";
+    document.getElementById("qProgressText").textContent = answered + " of " + scored + " answered";
+    document.getElementById("qHint").textContent = answered < scored ? "You can continue and come back to unanswered questions" : "Section complete";
     document.getElementById("nextBtn").disabled = false;
     document.getElementById("nextBtn").textContent = state.step === n - 1 ? "See my report" : "Next";
   }
