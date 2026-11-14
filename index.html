@@ -113,9 +113,7 @@ button:focus-visible, input:focus-visible, label:has(input:focus-visible) { outl
 .wcheck p { margin: 6px 0 0; overflow-wrap: anywhere; }
 .wcheck .wcnote { font-style: italic; }
 .hnote { margin: 0; font-size: 0.82rem; color: var(--fg2); border-left: 3px solid var(--part); padding: 6px 10px; background: color-mix(in srgb, var(--part) 7%, var(--surface)); border-radius: 0 8px 8px 0; max-width: 74ch; }
-.ev { display: flex; flex-direction: column; gap: 4px; max-width: 560px; }
-.ev label { font-size: 0.78rem; color: var(--fg2); }
-.ev input, .nameq input { font-size: 0.88rem; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--fg); width: 100%; }
+.nameq input { font-size: 0.88rem; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--fg); width: 100%; }
 .nameq input { max-width: 420px; }
 .navrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); }
 .navrow .hint { font-size: 0.82rem; color: var(--muted); }
@@ -126,6 +124,14 @@ button:focus-visible, input:focus-visible, label:has(input:focus-visible) { outl
 .qprogress-track span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--accent); transition: width .18s ease; }
 .opt .odesc { line-height: 1.4; }
 .opt:has(input:checked) { box-shadow: inset 3px 0 0 var(--accent); }
+fieldset.tstep { border: 0; margin: 0; padding: 0; min-width: 0; }
+.tstep { display: flex; flex-direction: column; gap: 6px; }
+.tstep > legend.tlabel { padding: 0; margin: 4px 0 6px; float: left; width: 100%; }
+.tlabel { font-size: 0.8rem; font-weight: 600; color: var(--fg2); }
+fieldset.tsub { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin: 0 0 4px 22px; padding: 0 0 0 14px; border: 0; border-left: 2px solid var(--accent); }
+.tsub > legend.tlabel { padding: 0; margin: 2px 0 6px; float: left; width: 100%; }
+.opt .oimp { color: var(--fg2); }
+.tnote { margin: 0; font-size: 0.8rem; color: var(--fg2); }
 @media (max-width: 600px) { .card { padding: 16px; } .qlist { gap: 20px; } .opt { padding: 10px 11px; } .stepnav { gap: 5px; } .stepnav button { padding: 6px 9px; } }
 
 /* report */
@@ -403,7 +409,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       <details><summary>Can I use my coding agent to answer?</summary>
         <p>Yes, the coding agent that built it can answer from the code and settings. Check its answers: it can't see your deployed systems or approvals, and it may overstate a control. Anything you give it may go to its model provider, under that provider's terms.</p></details>
       <details><summary>What do I have to share?</summary>
-        <p>Multiple-choice answers about how your agent is set up, plus an optional name and notes. No code, prompts, logs or credentials. Keep secrets out of the notes.</p></details>
+        <p>Multiple-choice answers about how your agent is set up, plus an optional name. No code, prompts, logs or credentials.</p></details>
       <details><summary>Where do my answers go?</summary>
         <p>Nowhere beyond this browser. The page's security policy blocks every network request. "Start over" deletes your answers.</p></details>
       <details><summary>Does an AI write the report?</summary>
@@ -4231,6 +4237,60 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     wrap.appendChild(box);
     return wrap;
   }
+  /* Two-step answer picker for scored questions. Step 1 asks how the boundary is protected, using the
+     report's status names; step 2 shows only the answers under that status, when there are two or more.
+     The saved answer is still one of the question's own answers, so scoring and reports don't change. */
+  var TREE = [["open", "Not protected", "Nothing stops it."], ["model", "Relies on the model", "Only the model's instructions or judgment."],
+    ["guard", "Checked by another model", "A guard model reviews it first."], ["out", "Controlled outside the model", "By code, settings, a sandbox, the service or a person. Choose this even if the control has gaps."],
+    ["unknown", "Don't know", ""]];
+  var pendingBucket = {};
+  function bucketOf(st) { return st === "partial" || st === "held" ? "out" : st; }
+  function treeBlock(id, label, why, opts, current, onPick, onPending, shownWhy, qid) {
+    var wrap = el("div", "q tree");
+    var t = el("div", "qt"); t.id = "qt-" + id; if (qid) t.appendChild(el("span", "qid", qid)); t.appendChild(document.createTextNode(label));
+    wrap.appendChild(t);
+    if (why) wrap.appendChild(el("p", "why", why));
+    if (shownWhy) wrap.appendChild(el("p", "shown", shownWhy));
+    function members(b) { return opts.filter(function (o) { return bucketOf(o.s) === b; }); }
+    var cur = opts.filter(function (o) { return o.v === current; })[0], pend = pendingBucket[id];
+    if (!pend || members(pend).length < 2 || (cur && bucketOf(cur.s) === pend)) { delete pendingBucket[id]; pend = null; }
+    var bk = pend || (cur ? bucketOf(cur.s) : null);
+    var step = el("fieldset", "tstep opts"), l1 = el("legend", "tlabel", "How is this protected?"); l1.id = "tl1-" + id; step.setAttribute("aria-labelledby", t.id + " " + l1.id); step.appendChild(l1);
+    TREE.forEach(function (b) {
+      var m = members(b[0]); if (!m.length) return;
+      var lab = el("label", "opt" + (bk === b[0] ? " on" : "")), inp = el("input");
+      inp.type = "radio"; inp.name = "t-" + id; inp.id = "t-" + id + "-" + b[0]; inp.value = b[0]; inp.checked = bk === b[0];
+      inp.addEventListener("change", function () {
+        if (m.length === 1) { delete pendingBucket[id]; onPick(m[0].v); }
+        else { pendingBucket[id] = b[0]; onPending(); }
+        var again = document.getElementById("t-" + id + "-" + b[0]); if (again) again.focus();
+      });
+      lab.appendChild(inp);
+      var sp = el("span", null, b[0] === "unknown" && m.length === 1 ? m[0].t : b[1]);
+      if (m.length === 1 && b[0] !== "unknown") { if (m[0].h) sp.appendChild(el("span", "tagline", "harness")); sp.appendChild(el("small", "odesc", m[0].t)); }
+      else if (b[2]) sp.appendChild(el("small", "odesc", b[2]));
+      if (m.length === 1 && m[0].d && current === m[0].v) sp.appendChild(el("small", "odesc oimp", m[0].d));
+      lab.appendChild(sp); step.appendChild(lab);
+      if (bk === b[0] && m.length > 1) {
+        var sub = el("fieldset", "tsub opts"), l2b = el("legend", "tlabel", "Which fits best?"); l2b.id = "tl2-" + id; sub.setAttribute("aria-labelledby", t.id + " " + l2b.id); sub.appendChild(l2b);
+        if (cur && bucketOf(cur.s) !== b[0]) sub.appendChild(el("p", "tnote", "Your current answer: \u201C" + cur.t + "\u201D. Pick one below to replace it."));
+        m.forEach(function (o) {
+          var l2 = el("label", "opt" + (current === o.v ? " on" : "")), i2 = el("input");
+          i2.type = "radio"; i2.name = "q-" + id; i2.id = "q-" + id + "-" + o.v; i2.value = o.v; i2.checked = current === o.v;
+          i2.addEventListener("change", function () { delete pendingBucket[id]; onPick(o.v); var again = document.getElementById("q-" + id + "-" + o.v); if (again) again.focus(); });
+          l2.appendChild(i2); var s2 = el("span", null, o.t);
+          if (o.h) s2.appendChild(el("span", "tagline", "harness"));
+          if (o.d && current === o.v) s2.appendChild(el("small", "odesc", o.d));
+          l2.appendChild(s2); sub.appendChild(l2);
+        });
+        step.appendChild(sub);
+      }
+    });
+    wrap.appendChild(step);
+    return wrap;
+  }
+  // A question counts as answered once it has a value; a tick-all-that-apply question needs at least one tick.
+  function isAnswered(id) { var v = state.ans[id]; return v !== undefined && !(Array.isArray(v) && !v.length); }
   function q2opts(arr) { return arr.map(function (o) { return { v: o[0], t: o[1], d: o[2] }; }); }
 
   function renderQuiz() {
@@ -4246,7 +4306,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     for (var i = 0; i < n; i++) (function (i) {
       var sb = i ? allSteps[i - 1] : null, btn = el("button"), tot = 0, got = 0;
       btn.type = "button";
-      if (sb) visibleQs(sb, s, state.ans).forEach(function (id) { if (isRoute(id)) return; tot++; if (state.ans[id] !== undefined) got++; });
+      if (sb) visibleQs(sb, s, state.ans).forEach(function (id) { tot++; if (isAnswered(id)) got++; });
       btn.appendChild(el("span", null, sb ? sb.name : "Profile"));
       if (sb && tot) { var sc = el("span", "sc", got + "/" + tot); sc.setAttribute("aria-label", got + " of " + tot + " answered"); btn.appendChild(sc); }
       if (sb && tot && got === tot) btn.classList.add("full");
@@ -4268,7 +4328,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       ni.addEventListener("input", function () { state.name = ni.value; save(); });
       nq.appendChild(ni); list.appendChild(nq);
       profileQs(s).forEach(function (q) {
-        list.appendChild(radioBlock(q.id, q.q, q.why, q2opts(q.opts), s[q.id], function (v) { s[q.id] = v; if (q.id === "built" && !hz(s)) delete s.q2b; save(); renderQuiz(); }));
+        list.appendChild(radioBlock(q.id, q.q, q.why, q2opts(q.opts), s[q.id], function (v) { s[q.id] = v; if (q.id === "built" && !hz(s)) delete s.q2b; pruneAnswers(); save(); renderQuiz(); }));
       });
       if (!s.caps) s.caps = {};
       var capOpts = CAPS.map(function (c) { return { v: c[0], t: c[1], d: c[3] && hz(s) ? "Every harness gives the agent tools, so this is always on." : c[2], locked: c[3] && hz(s) }; });
@@ -4298,28 +4358,23 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     var vis = visibleQs(b, s, state.ans), scored = 0, answered = 0;
     var condOf = {}; b.qs.forEach(function (q) { if (q[2]) condOf[q[0]] = q[2]; });
     vis.forEach(function (id) {
+      scored++; if (isAnswered(id)) answered++;
       if (isRoute(id)) {
         var r = ROUTE[id], ropts = r.opts.filter(function (o) { return !o[3] || (o[3] === "h") === hz(s); }).map(function (o) { return { v: o[0], t: o[1], d: o[2] }; });
         if (r.multi) list.appendChild(checkBlock(id, r.title, r.why, ropts, state.ans[id], function (next) { state.ans[id] = next; state.example = false; save(); renderQuiz(); }, condOf[id], dispId(id)));
         else list.appendChild(radioBlock(id, r.title, r.why, ropts, state.ans[id], function (v) { state.ans[id] = v; state.example = false; save(); renderQuiz(); }, condOf[id], dispId(id)));
         return;
       }
-      var q = Q[id]; scored++; if (state.ans[id] !== undefined) answered++;
-      var opts = optionsFor(id, s).map(function (o) { return { v: o.v, t: o.t, h: o.h, d: o.i || null, selectedOnly: true }; });
-      var blk = radioBlock(id, q.title, fillH(q.desc, s) || null, opts, state.ans[id], function (v) { state.ans[id] = v; state.example = false; save(); renderQuiz(); }, condOf[id], dispId(id));
-      if (hz(s) && q.hn) blk.insertBefore(el("p", "hnote", "On " + H(s) + ": " + fillH(q.hn, s)), blk.querySelector(".opts"));
+      var q = Q[id];
+      var opts = optionsFor(id, s).map(function (o) { return { v: o.v, t: o.t, h: o.h, d: o.i || null, s: o.s }; });
+      var blk = treeBlock(id, q.title, fillH(q.desc, s) || null, opts, state.ans[id], function (v) { state.ans[id] = v; state.example = false; save(); renderQuiz(); },
+        function () { renderQuiz(); }, condOf[id], dispId(id));
+      if (hz(s) && q.hn) blk.insertBefore(el("p", "hnote", "On " + H(s) + ": " + fillH(q.hn, s)), blk.querySelector(".tstep"));
       if (hz(s) && q.wc && q.wc[s.built]) {
         var wc = el("details", "wcheck"); wc.appendChild(el("summary", null, "Where to check in " + H(s) + " (documented Nov 2026)"));
         wc.appendChild(el("p", "wcnote", "These are places to inspect, not confirmation that a control is enabled or effective. Check the actual configuration, policy overrides, execution mode and other routes that may bypass it."));
         (function (w) { wc.appendChild(el("p", null, typeof w === "string" ? w : w.t)); if (w && w.src && w.src.length) { var sp = el("p", "wcsrc"); sp.appendChild(document.createTextNode("Source" + (w.src.length > 1 ? "s" : "") + ": ")); w.src.forEach(function (u, n) { if (n) sp.appendChild(document.createTextNode(" \u00B7 ")); var a = el("a", null, u.replace(/^https?:\/\//, "")); a.href = u; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Source: " + u + " (opens in a new tab)"); sp.appendChild(a); }); wc.appendChild(sp); } })(q.wc[s.built]);
-        blk.insertBefore(wc, blk.querySelector(".opts"));
-      }
-      var cur = ansObj(id, state.ans, s);
-      if (cur && cur.s === "held") {
-        var ev = el("div", "ev"), lb = el("label", null, "Evidence (optional): config, policy, test, diagram or owner"); lb.htmlFor = "ev-" + id;
-        var inp = el("input"); inp.type = "text"; inp.id = "ev-" + id; inp.value = state.ev[id] || "";
-        inp.addEventListener("input", function () { state.ev[id] = inp.value; save(); });
-        ev.appendChild(lb); ev.appendChild(inp); blk.appendChild(ev);
+        blk.insertBefore(wc, blk.querySelector(".tstep"));
       }
       list.appendChild(blk);
     });
@@ -4580,7 +4635,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       var row = el("div", "arow"); row.appendChild(rchip(it.st, s)); if (it.opt.o) row.appendChild(el("span", "aw", "Held by " + whoPlain(it.opt.o, s))); box.appendChild(row);
       if (it.opt.i) box.appendChild(el("div", "aw", "Assessment wording: " + it.opt.i));
       if (it.st === "unknown") { var h = heldAnswers(it.id, s); if (h.length) box.appendChild(el("div", "aw", "Find out whether: " + h.map(function (x) { return x.t; }).join("; or: "))); }
-      if (it.st === "held") box.appendChild(el("div", "aw", state.ev[it.id] && !viewing.example ? "Evidence supplied (not verified): " + state.ev[it.id] : (viewing.example && viewing.ev && viewing.ev[it.id] ? "Evidence supplied (not verified): " + viewing.ev[it.id] : "No evidence given.")));
+      if (it.st === "held") { var evt = state.ev[it.id] && !viewing.example ? state.ev[it.id] : (viewing.example && viewing.ev && viewing.ev[it.id]) || ""; if (evt) box.appendChild(el("div", "aw", "Evidence supplied (not verified): " + evt)); }
       itemNotes(it, s, a, t).forEach(function (n) { box.appendChild(el("div", "xn", n)); });
       det.appendChild(box);
     });
@@ -4914,7 +4969,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     te.items.forEach(function (it) {
       var q = "- **" + qn(it.id) + ".** " + Q[it.id].title;
       if (!it.opt) { out.push(q + " Not answered."); return; }
-      out.push(q + " Answer: “" + it.opt.t + "” (" + LBL[it.opt.s] + (it.opt.o ? ", held by " + whoPlain(it.opt.o, s) : "") + ")." + (it.opt.i ? " Assessment wording: " + endDot(it.opt.i) : "") + (it.opt.s === "held" ? (current().ev && current().ev[it.id] ? " Evidence supplied (not verified): " + endDot(current().ev[it.id]) : " No evidence given.") : ""));
+      out.push(q + " Answer: “" + it.opt.t + "” (" + LBL[it.opt.s] + (it.opt.o ? ", held by " + whoPlain(it.opt.o, s) : "") + ")." + (it.opt.i ? " Assessment wording: " + endDot(it.opt.i) : "") + (it.opt.s === "held" ? (current().ev && current().ev[it.id] ? " Evidence supplied (not verified): " + endDot(current().ev[it.id]) : "") : ""));
     });
   }
   function reportMarkdown() {
@@ -5586,7 +5641,16 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     });
   }
   function go(view) { if (view === "intro") { viewing.example = null; renderIntro(); } else if (view === "quiz") { viewing.example = null; renderQuiz(); } else renderMap(); window.scrollTo(0, 0); }
-  function clearAll() { state.name = ""; state.shape = {}; state.ans = {}; state.ev = {}; state.step = 0; save(); }
+  /* An answer the current profile no longer offers (e.g. a harness-only answer after switching harness) is deleted,
+     so the question shows as unanswered instead of counting as answered while the report leaves it out. */
+  function pruneAnswers() {
+    var s = state.shape;
+    Object.keys(state.ans).forEach(function (id) {
+      if (!Q[id] || isRoute(id)) return;
+      if (!optionsFor(id, s).some(function (o) { return o.v === state.ans[id]; })) { delete state.ans[id]; delete pendingBucket[id]; }
+    });
+  }
+  function clearAll() { pendingBucket = {}; state.name = ""; state.shape = {}; state.ans = {}; state.ev = {}; state.step = 0; save(); }
   document.getElementById("startBtn").addEventListener("click", function () { state.step = 0; go("quiz"); });
   document.getElementById("resumeBtn").addEventListener("click", function () { state.step = 0; go(profileComplete() && Object.keys(state.ans).length ? "map" : "quiz"); });
   document.getElementById("ownBtn").addEventListener("click", function () { viewing.example = null; state.step = 0; go("quiz"); });
@@ -5632,7 +5696,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     if (window.claude && typeof window.claude.use === "function") window.claude.use("downloads").then(function (d) { if (d) { DL = d; setExport(true); } else useBlobDownloads(); }, useBlobDownloads);
     else useBlobDownloads();
   } catch (e) { useBlobDownloads(); }
-  load();
+  if (load()) { pruneAnswers(); save(); }
   renderIntro();
   window.__tm = { evaluate: evaluate, legs: legs, routes: routes, evalAll: evalAll, themeEval: themeEval, pickExample: pickExample, optionsFor: optionsFor, activeSteps: activeSteps, visibleQs: visibleQs, PROFILES: PROFILES, profileAnswers: profileAnswers, THEMES: THEMES, summaryText: summaryText, state: function () { return state; }, viewing: viewing, go: go, Q: Q, STEPS: STEPS, skippedList: skippedList, unansweredList: unansweredList };
 })();
