@@ -11,7 +11,7 @@ Source: https://github.com/google/fonts at commit c30b221beb0c1da59d563feb91ec86
   ofl/ibmplexsans/IBMPlexSans[wdth,wght].ttf
   ofl/jetbrainsmono/JetBrainsMono[wght].ttf
 
-Modifications (tools/build_fonts.py): each variable font is pinned to static
+Modifications: each variable font is pinned to static
 weights (Fraunces 400 and 600 at opsz 24; IBM Plex Sans 400, 500 and 600 at
 wdth 100; JetBrains Mono 400 and 600), subset to Latin characters, and stripped
 of hinting.

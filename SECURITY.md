@@ -20,7 +20,7 @@ Include what you found, the steps to reproduce it, the browser and version, and 
 - A way for the page to send data out, or to load anything from the network.
 - Script injection through anything the app reads: the agent's name, evidence notes, or answers saved in the browser's storage.
 - A way for an exported PDF or Markdown file to carry something other than the report.
-- Tampering risks in the bundled components (fonts, jsPDF) or the build scripts in `tools/`.
+- Tampering risks in the bundled components (fonts, jsPDF).
 
 ## Not a vulnerability, but please tell us
 

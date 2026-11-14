@@ -158,9 +158,9 @@ Every question is tied to public evidence: a real incident, a demonstrated attac
 - **Not a scanner.** It never connects to or inspects your agent.
 - **Not a content-safety review.** It looks at what your agent can do and who authorizes it, not at what the model says. Harmful output, hallucination and bias are out of scope.
 
-## Build from source
+## Editing the app
 
-`index.html` is generated, so don't edit it by hand. The scripts in [`tools/`](tools/README.md) build it from the original export in `src/`: they bundle the fonts and jsPDF, and add the security policy, the PDF renderer, the evidence links and the summary report. `tools/test_exports.sh` exports every example report, full and summary, and checks the output.
+The whole app is one file, `index.html`, with the fonts and jsPDF bundled inside it. There's no build step: edit the file and open it in a browser.
 
 ## Contributing
 
