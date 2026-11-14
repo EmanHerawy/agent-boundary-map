@@ -57,7 +57,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Research:** [Beurer-Kellner et al., *Design Patterns for Securing LLM Agents*](https://arxiv.org/abs/2506.08837) (2025). It describes agent designs with provable resistance to prompt injection, which shows what a protection outside the model can look like.
 
 ### I5 · Folder files changing setup
-> What stops files in that folder from changing the agent's instructions or settings?
+> What stops files you didn't review from changing the agent's instructions or settings?
 
 - **Real incident:** [Instruction-file poisoning](https://labs.cloudsecurityalliance.org/research/csa-research-note-agent-instruction-file-poisoning-20261027/) (Cloud Security Alliance, Oct 2026). A compromised contributor account committed agent files that run a credential stealer when the repo is opened in an AI tool.
 - **Demonstrated attack:** [Claude Code project files, CVE-2025-59536](https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files/) (Check Point, Feb 2026). Hooks and MCP servers defined in a cloned repo ran when the project was opened, with no prompt. It was fixed.
@@ -73,7 +73,7 @@ The rest of this page goes question by question, in the order the map asks them.
 ## Outside content
 
 ### C1 · Off-task requests
-> Something the agent reads asks it to do something its job doesn't need. Can it?
+> Can content the agent reads get it to do something its job doesn't need?
 
 - **Demonstrated attack:** [*Invitation Is All You Need*](https://www.safebreach.com/blog/invitation-is-all-you-need-hacking-gemini/) (SafeBreach, Aug 2025). Instructions hidden in a calendar invite made Gemini delete events and control home appliances. Nothing in the user's task needed either action.
 
@@ -111,7 +111,7 @@ The rest of this page goes question by question, in the order the map asks them.
 ## Knowledge sources
 
 ### N1 · Retrieval per user
-> When the agent retrieves documents or search results, what limits what each user can get?
+> How is retrieval limited to the documents and search results the user is authorized to access?
 
 - **Standard:** [Copilot data foundation guidance](https://learn.microsoft.com/en-us/sharepoint/sharepoint-copilot-best-practices) (Microsoft). Copilot answers from everything a user already has access to, so Microsoft tells admins to fix oversharing first. Retrieval inherits any access that's too broad.
 
@@ -163,7 +163,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Demonstrated attack:** [Claude Code project files, CVE-2026-21852](https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files/) (Check Point, Feb 2026). A repo's settings could send the user's API key to an attacker's server. It was fixed before publication. Anything that can redirect or read a credential can leak it.
 
 ### T4 · Credential scope
-> How much can each credential do?
+> What can each credential reach, and what can it do there?
 
 - **Demonstrated attack:** [GitHub MCP exploit](https://tessl.io/blog/malicious-github-issue-ai-agent-leak/) (Invariant Labs research, reported by Tessl, Jun 2025). A malicious public issue made an agent copy data from a private repo into a public pull request. The agent's token could reach far more than its task needed.
 
@@ -173,7 +173,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Real incident:** [Salesloft Drift token theft](https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift) (Google Threat Intelligence, Aug 2025). Stolen tokens pulled Salesforce data from Aug 8 to at least Aug 18, until they were revoked on Aug 20. The longer a credential stays valid, the longer a thief can use it.
 
 ### T6 · Trusting tool results
-> When a tool's result drives a decision that matters, does anything check it independently?
+> When a tool's result leads to an action that matters, is it checked against a source the tool can't influence?
 
 - **Research:** [AgentDojo](https://arxiv.org/abs/2406.13352) (Debenedetti et al., 2024). Data returned by external tools hijacked agents into carrying out malicious tasks.
 - **Research:** [InjecAgent](https://arxiv.org/abs/2403.02691) (Zhan et al., ACL Findings 2024). Outside content reaching a tool-using agent hijacked a GPT-4 agent 24% of the time. A tool's result is untrusted input, however it's formatted.
@@ -191,7 +191,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Demonstrated attack:** [Codex CLI, CVE-2025-61260](https://research.checkpoint.com/2025/openai-codex-cli-command-injection-vulnerability/) (Check Point, Dec 2025). An MCP server declared in a repo's config ran at startup, with no approval.
 
 ### P3 · Servers changing
-> How are third-party MCP servers prevented from changing after approval?
+> What makes sure a third-party MCP server still runs the version you approved?
 
 - **Real incident:** [postmark-mcp backdoor](https://www.theregister.com/2025/09/29/postmark_mcp_server_code_hijacked/) (The Register, Sep 2025). After 15 releases, version 1.0.16 of an npm MCP server began secretly BCC-ing emails to an outside server.
 - **Demonstrated attack:** [MCPoison, CVE-2025-54136](https://research.checkpoint.com/2025/cursor-vulnerability-mcpoison/) (Check Point, Aug 2025). In Cursor, an approved server's command could be changed and still run, with no new prompt. It was fixed in Cursor 1.3.
@@ -240,7 +240,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Background:** [postmark-mcp backdoor](https://www.theregister.com/2025/09/29/postmark_mcp_server_code_hijacked/) (The Register, Sep 2025). After 15 releases, an update to an npm MCP server added a hidden backdoor. This was an MCP server, not a skill or plugin, but any item that updates after review could change the same way.
 
 ### K5 · Items granting permissions
-> Can a skill or plugin give the agent permissions, so actions skip the usual checks?
+> Can a skill or plugin bypass or weaken the agent's approval and authorization checks?
 
 - **Research:** [What's the "Matter" with Skills?](https://www.hiddenlayer.com/research/whats-the-matter-with-skills) (HiddenLayer, Jul 2026). A skill's `allowed-tools` frontmatter could pre-authorize tool use in Claude Code. An item can bring its own permissions.
 - **Background:** [Claude Code issue #67198](https://github.com/anthropics/claude-code/issues/67198) (Jun 2026). A skill's permission grants applied when the user invoked it, but not when the model did. How permissions behave can depend on the path, so check each one.
@@ -287,7 +287,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Demonstrated attack:** [EscapeRoute](https://cymulate.com/blog/cve-2025-53109-53110-escaperoute-anthropic/) (Cymulate, 2025). Two flaws let attackers escape the Filesystem MCP server's sandbox. They were fixed. A boundary the tool enforces on itself can be bypassed.
 
 ### X6 · Pre-approved commands
-> Can commands that skip approval be used to run other code?
+> Can commands that skip approval run other code or send data out?
 
 - **Demonstrated attack:** [CVE-2025-55284](https://embracethered.com/blog/posts/2025/claude-code-exfiltration-via-dns-requests/) (Embrace The Red, Aug 2025). `ping`, `nslookup`, `host` and `dig` ran without approval, and they carried the data out. It was fixed in v1.0.4. "Harmless" pre-approved commands were enough to leak data.
 
@@ -373,7 +373,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Research:** [Agent session smuggling](https://unit42.paloaltonetworks.com/agent-session-smuggling-in-agent2agent-systems/) (Palo Alto Networks Unit 42, Oct 2025). A malicious remote agent slipped extra instructions into an agent-to-agent session. This is a proof of concept and hasn't been seen in the wild. A request from another agent can carry instructions.
 
 ### G2 · Authority handed on
-> When this agent hands work to another agent or a sub-agent, what limits what the receiver can do?
+> When this agent hands work to another agent or a sub-agent, what keeps the receiver within the task it was given?
 
 - **Research:** [*Multi-Agent Systems Execute Arbitrary Malicious Code*](https://arxiv.org/abs/2503.12188) (Triedman et al., 2025). Malicious content hijacked AutoGen, CrewAI and MetaGPT into running arbitrary code, even when the individual agents refused. Authority passed between agents can be used by whatever steers them.
 

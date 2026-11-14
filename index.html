@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Agent Boundary Map</title>
+<meta name="description" content="A guided self-assessment for teams that build AI agents: map each trust boundary, what enforces it, and whether it holds independently of the model. Runs in your browser; nothing is uploaded.">
 <script>
 /* Bundled fonts (SIL Open Font License 1.1): Fraunces, JetBrains Mono, and IBM Plex Sans
    renamed ABM Sans (modified version; Plex is a Reserved Font Name). Static weights, subset
@@ -22,7 +23,7 @@ window.__ABM_FONTS = [{"id":"fraunces-400","family":"Fraunces","weight":400,"rat
    Status colors carry the meaning: held outside the model / partial control / checked by another model / don't know / relies on the model / nothing stops it. */
 :root {
   --bg: #f6f5f2; --surface: #ffffff; --sunken: #eeece6; --border: #ddd9d0;
-  --fg: #1c1b18; --fg2: #5c5950; --muted: #8c887d; --accent: #6250d6;
+  --fg: #1c1b18; --fg2: #5c5950; --muted: #6b675d; --accent: #6250d6;
   --held: #1f7a3d; --part: #2a6fc4; --guard: #0e7f86; --model: #b07800; --open: #c6373a; --unk: #7d7a72;
   --display: "Fraunces", Georgia, serif;
   --body: "ABM Sans", system-ui, -apple-system, sans-serif;
@@ -31,14 +32,14 @@ window.__ABM_FONTS = [{"id":"fraunces-400","family":"Fraunces","weight":400,"rat
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #17161a; --surface: #201f24; --sunken: #1a191d; --border: #35333a;
-    --fg: #f0eeee; --fg2: #b4b1ba; --muted: #817e88; --accent: #9085e9;
+    --fg: #f0eeee; --fg2: #b4b1ba; --muted: #95929c; --accent: #9085e9;
     --held: #3fa35c; --part: #4f92e3; --guard: #2bb3ba; --model: #d39a1c; --open: #e66767; --unk: #9a978f;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #17161a; --surface: #201f24; --sunken: #1a191d; --border: #35333a;
-  --fg: #f0eeee; --fg2: #b4b1ba; --muted: #817e88; --accent: #9085e9;
+  --fg: #f0eeee; --fg2: #b4b1ba; --muted: #95929c; --accent: #9085e9;
   --held: #3fa35c; --part: #4f92e3; --guard: #2bb3ba; --model: #d39a1c; --open: #e66767; --unk: #9a978f;
   color-scheme: dark;
 }
@@ -58,8 +59,10 @@ button:focus-visible, input:focus-visible, label:focus-within { outline: 2px sol
 .muted { color: var(--muted); }
 .lead { color: var(--fg2); max-width: 66ch; margin: 0; }
 .btnrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.btn { font-size: 0.88rem; padding: 9px 15px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+.btn { font-size: 0.88rem; min-height: 44px; padding: 9px 15px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
 .btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn.primary:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.primary:disabled { opacity: .45; cursor: not-allowed; }
 .btn.armed { background: var(--open); border-color: var(--open); color: #fff; }
@@ -302,17 +305,22 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
 .seg label + label { margin-left: 16px; }
 .seg input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; cursor: pointer; }
 .seg label:has(input:checked) { font-weight: 600; }
-.hero { grid-template-areas: "top side" "ex side"; align-items: start; row-gap: 18px; }
-.h-top { grid-area: top; min-width: 0; } .h-side { grid-area: side; min-width: 0; display: flex; flex-direction: column; gap: 16px; } .h-ex { grid-area: ex; min-width: 0; }
-@media (max-width: 760px) { .hero { grid-template-areas: "top" "side" "ex"; } }
-.hero .lead { margin-bottom: 16px; }
-.h-len { margin-top: 8px; }
-.hero .trust { list-style: none; margin: 16px 0 0; padding: 12px 14px; display: grid; gap: 8px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 9px; background: var(--sunken); font-size: 0.9rem; }
+/* Landing: hero (brand, headline, action, trust) beside the example map; then how it works
+   beside the example reports. On a phone: hero, steps, map, examples. */
+.hero { grid-template-areas: "top map" "how ex"; align-items: start; column-gap: 36px; row-gap: 28px; padding: 32px 32px 28px; }
+.h-top { grid-area: top; min-width: 0; } .h-map { grid-area: map; align-self: center; } .h-how { grid-area: how; min-width: 0; } .h-ex { grid-area: ex; min-width: 0; }
+.h-how, .h-ex { border-top: 1px solid var(--border); padding-top: 22px; }
+@media (max-width: 760px) { .hero { grid-template-areas: "top" "how" "map" "ex"; padding: 22px 18px; } }
+.hero .brand { margin: 0; font-family: var(--display); font-size: 1rem; font-weight: 600; color: var(--fg); }
+.hero h1 { font-size: clamp(2.1rem, 1.4rem + 2.4vw, 2.75rem); line-height: 1.1; margin: 10px 0 14px; }
+.hero .lead { margin-bottom: 20px; max-width: 60ch; }
+.hero .h-sec { font-size: 1.15rem; line-height: 1.25; margin: 0 0 10px; }
+.hero .trust { list-style: none; margin: 22px 0 0; padding: 18px 0 0; display: grid; gap: 8px; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--fg2); }
 .hero .trust li { margin: 0; }
 .hero .trust strong, .hero .steps strong { color: var(--fg); font-weight: 600; }
-.hero .steps { list-style: none; counter-reset: st; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; color: var(--fg2); }
-.hero .steps li { counter-increment: st; margin: 0; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; align-items: start; }
-.hero .steps li::before { content: counter(st); width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-weight: 600; font-size: 0.85rem; }
+.hero .steps { list-style: none; counter-reset: st; margin: 0; padding: 0; display: grid; gap: 12px; color: var(--fg2); }
+.hero .steps li { counter-increment: st; margin: 0; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; align-items: start; }
+.hero .steps li::before { content: counter(st); width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); color: var(--fg); display: grid; place-items: center; font-weight: 600; font-size: 0.82rem; }
 .hero li a, .note a, #qDesc a, .wcsrc a { color: var(--accent); }
 .hero li a:visited, .note a:visited, #qDesc a:visited, .wcsrc a:visited { color: color-mix(in srgb, var(--accent) 60%, var(--muted)); }
 </style>
@@ -321,7 +329,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
 
   <section id="v-intro" class="card hero">
     <div class="h-top">
-      <span class="eyebrow">Agent Boundary Map</span>
+      <p class="brand">Agent Boundary Map</p>
       <h1>See where your agent puts its trust</h1>
       <p class="lead">For teams that build or configure AI agents—whether in your own code or on a harness such as Claude Code or Codex. Map each trust boundary: what enforces it, and whether that enforcement is independent of the model’s instructions and decisions.</p>
       <div class="btnrow">
@@ -332,25 +340,22 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
       <ul class="trust">
         <li><strong>Nothing to upload.</strong> You describe your setup by answering questions: no code, configuration or logs.</li>
         <li><strong>Your answers stay in this browser.</strong> The page makes no network requests, and its security policy blocks them.</li>
-        <li><strong>Why each question is here:</strong> <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="the evidence (opens in a new tab)">the evidence ↗</a>, from real incidents, research and security standards.</li>
-      </ul>
+        <li><strong>Why each question is here:</strong> <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="the evidence (opens in a new tab)">the evidence ↗</a>, from real incidents, research and security standards.</li>      </ul>
     </div>
-    <div class="h-side">
-      <div>
-        <span class="eyebrow">How it works</span>
+    <div class="mini h-map" aria-label="Example boundary map">
+      <div id="introMap"></div>
+      <p>Example map: a repo maintenance agent configured on Codex.</p>
+    </div>
+    <div class="h-how">
+        <h2 class="h-sec">How it works</h2>
         <ol class="steps">
           <li><span><strong>Describe your agent.</strong> What runs it, and which parts it has: tools, memory, MCP servers and more. You only get questions about those parts.</span></li>
           <li><span><strong>Answer how each boundary holds.</strong> Answer for the least-protected route. If you cannot verify a control, choose “Don’t know”: the report will show what to investigate.</span></li>
           <li><span><strong>Get your report.</strong> It opens with the routes untrusted input could take: could one injected message make the agent read sensitive information and send it out, or change things? Then each finding, with what to do. Save it as a PDF or Markdown, in summary or in full.</span></li>
         </ol>
-      </div>
-      <div class="mini" aria-label="Example boundary map">
-        <div id="introMap"></div>
-        <p>Example map: a repo maintenance agent configured on Codex.</p>
-      </div>
     </div>
     <div class="h-ex">
-      <div class="exintro" style="margin-top:0"><span class="eyebrow">Example reports</span><p class="note">Fixed, illustrative assessments: not certifications or evidence about real deployments. Opening one doesn't change your own answers.</p><div class="exlist2" id="exList"></div></div>
+      <div class="exintro" style="margin-top:0"><h2 class="h-sec">Example reports</h2><p class="note">Fixed, illustrative assessments: not certifications or evidence about real deployments. Opening one doesn't change your own answers.</p><div class="exlist2" id="exList"></div></div>
     </div>
   </section>
 
