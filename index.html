@@ -54,7 +54,7 @@ body {
 .wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
 h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; font-weight: 600; }
 button, input { font: inherit; color: inherit; }
-button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; min-width: 0; }
 .muted { color: var(--muted); }
 .lead { color: var(--fg2); max-width: 66ch; margin: 0; }
@@ -305,7 +305,7 @@ textarea#copyBox { width: 100%; min-height: 160px; font-family: var(--mono); fon
   --body: "Archivo", system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 }
-html.navy h1, html.navy h2, html.navy h3 { font-stretch: 75%; font-weight: 700; letter-spacing: 0.005em; }
+html.navy h1, html.navy h2, html.navy h3, html.navy .verdict-line { font-stretch: 75%; font-weight: 700; letter-spacing: 0.005em; }
 html.navy .btn.primary, html.navy .stepnav button[aria-current="step"], html.navy .btn.armed, html.navy .sevtag { color: var(--bg); }
 html.navy .btn.primary:hover { background: #e3b45a; }
 html.navy .chip.c-open, html.navy .route.r-supported .rl { background: color-mix(in srgb, var(--open) 9%, transparent); }
@@ -475,7 +475,6 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       <div class="card grp" id="inheritCard" hidden></div>
       <div class="views" id="views"></div>
       <div id="lists" class="wrap" style="gap:14px"></div>
-      <p class="note">The rule behind every question: the model may propose, but something outside the model must authorize.</p>
       <p class="note">Evidence behind these questions: <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="why we ask them (opens in a new tab)">why we ask them ↗</a> · <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/evidence.md" target="_blank" rel="noopener" aria-label="evidence register (opens in a new tab)">evidence register ↗</a>.</p>
     </div>
   </section>
@@ -4942,7 +4941,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     out.push("", "## Boundaries", ""); res.forEach(function (r) { out.push("- **" + r.b.name + ":** " + (r.status ? boxCount(r).text + "; weakest: " + LBL[r.status].toLowerCase() : "not answered")); });
     var un = unansweredList(s, a); if (un.length) { out.push("", "## Unanswered", ""); un.forEach(function (x) { out.push("- **" + x.where + ":** " + x.why); }); }
     var sk = skippedList(s, a); if (sk.length) { out.push("", "## Not applicable based on your answers", "", "Not verified safe.", ""); sk.forEach(function (x) { out.push("- **" + x.where + ":** " + x.why); }); }
-    out.push("", "---", "", "The rule behind every question: the model may propose, but something outside the model must authorize.");
+    out.push("", "---");
     out.push("", "Evidence behind these questions: [why we ask them](https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md) \u00B7 [evidence register](https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/evidence.md).");
     return out.join("\n") + "\n";
   }
@@ -5424,7 +5423,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     }
     var cn = sumCounts(D); if (cn && D.findings.length) out.push("", cn);
     out.push("", "## Boundaries", ""); D.res.forEach(function (r) { out.push("- **" + r.b.name + ":** " + (r.status ? boxCount(r).text + "; weakest: " + LBL[r.status].toLowerCase() : "not answered")); });
-    out.push("", "---", "", "Evidence behind these questions: [why we ask them](" + SUM_GUIDE + ") · [evidence register](" + SUM_REGISTER + ").", "", "The rule behind every question: the model may propose, but something outside the model must authorize.");
+    out.push("", "---", "", "Evidence behind these questions: [why we ask them](" + SUM_GUIDE + ") · [evidence register](" + SUM_REGISTER + ").");
     return out.join("\n") + "\n";
   }
 
@@ -5535,7 +5534,6 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     ft.appendChild(document.createTextNode("Evidence behind these questions: ")); ft.appendChild(ev(SUM_GUIDE, "why we ask them"));
     ft.appendChild(document.createTextNode(" · ")); ft.appendChild(ev(SUM_REGISTER, "evidence register")); ft.appendChild(document.createTextNode("."));
     sec.appendChild(ft);
-    sec.appendChild(el("p", "note", "The rule behind every question: the model may propose, but something outside the model must authorize."));
     return sec;
   }
   window.__tmExport = { markdown: reportMarkdown, summary: summaryMarkdown, pdf: buildPdf };
