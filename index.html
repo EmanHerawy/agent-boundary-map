@@ -382,22 +382,21 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     <section class="l-faq" aria-labelledby="l-faq-title">
       <h2 id="l-faq-title">Questions and answers</h2>
       <details><summary>Where do the questions come from?</summary>
-        <p>From real incidents, demonstrated attacks, research and security standards. 58 of the 66 questions have a direct public case; the other 8 rest on established security principles and are marked that way. Every source is linked in the <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="evidence guide (opens in a new tab)">evidence guide ↗</a>.</p></details>
+        <p>58 of the 66 questions have direct public evidence: real incidents, demonstrated attacks, research or security standards. The other 8 rest on established security principles. Every source is in the <a href="https://github.com/EmanHerawy/agent-boundary-map/blob/main/docs/user-guide-evidence.md" target="_blank" rel="noopener" aria-label="evidence guide (opens in a new tab)">evidence guide ↗</a>.</p></details>
       <details><summary>How many questions do I have to answer?</summary>
-        <p>It depends on your agent: you only get questions about the parts it has. That's about 16 for the simplest agent, and up to about 70 for one with every part. Answers save as you go, so you can stop and come back.</p></details>
+        <p>Only those about the parts your agent has: 12 for the simplest agent, up to 66 for one with every part, after a short profile. You can stop and come back later.</p></details>
       <details><summary>Can I use my coding agent to answer?</summary>
-        <p>Yes. The coding agent that built or configures your agent can usually answer from its code and settings, so you can ask it each question. Check its answers before you pick one: an agent can overstate a control, and "Don't know" is better than a guess. Anything you share with that agent goes to its provider, not to this page.</p></details>
+        <p>Yes, the coding agent that built it can answer from the code and settings. Check its answers: it can't see your deployed systems or approvals, and it may overstate a control. Anything you give it may go to its model provider, under that provider's terms.</p></details>
       <details><summary>What do I have to share?</summary>
-        <p>Only your answers to multiple-choice questions about how your agent is set up: which parts it has (tools, memory, MCP servers and so on) and what checks happen before it acts. You can also add a name for the agent and short notes on the controls you say are enforced. Both are optional.</p>
-        <p>You never paste code, configuration, prompts, logs or credentials. Keep secrets out of the notes, too.</p></details>
+        <p>Multiple-choice answers about how your agent is set up, plus an optional name and notes. No code, prompts, logs or credentials. Keep secrets out of the notes.</p></details>
       <details><summary>Where do my answers go?</summary>
-        <p>Nowhere. They're saved in this browser, on this device only. The page makes no network requests, and its security policy blocks them. Downloads are made in your browser. "Start over" deletes your answers.</p></details>
+        <p>Nowhere beyond this browser. The page's security policy blocks every network request. "Start over" deletes your answers.</p></details>
       <details><summary>Does an AI write the report?</summary>
-        <p>No. Fixed rules in this page turn your answers into the report, the same way every time. No AI model sees your answers.</p></details>
+        <p>No. Fixed rules in this page build it, the same way every time.</p></details>
       <details><summary>Does it connect to or scan my agent?</summary>
-        <p>No. It never connects to your agent or reads its code. The report reflects what you answered, not a test of your system.</p></details>
+        <p>No. It never connects to your agent or reads its code.</p></details>
       <details><summary>Is the report a certification?</summary>
-        <p>No. It's a self-assessment: it shows what your answers allow, not proof that an attack would work or that a control is in place. Use it to decide what to check and fix first. The example reports are illustrative too: they aren't about real deployments, and opening one doesn't change your own answers.</p></details>
+        <p>No. It's a self-assessment of what you reported, not proof of an attack or of a control. The example reports are illustrative.</p></details>
     </section>
   </section>
 
