@@ -3223,33 +3223,33 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g1",
    "step": "agents",
-   "title": "When another agent sends this one a request, what's checked?",
-   "desc": "Through A2A or another protocol, a queue or a shared channel. Answer for the least protected inbound channel, including shared queues and channels.",
+   "title": "When another agent asks this agent to do something, what's checked before it acts?",
+   "desc": "For example, your billing agent may ask for refunds, but your chat agent may not. Count every way requests arrive (a protocol such as A2A, a queue, a shared channel) and answer for the least protected one.",
    "cond": "Other agents step",
    "a": [
     {
-     "t": "Nothing: requests from other agents are trusted because they're \"internal\"",
+     "t": "Nothing. Requests from other agents are trusted because they come from inside",
      "s": "open",
      "o": "",
-     "i": "Anyone who can send a message on that channel can command the agent"
+     "i": "Anyone who can send on that channel can command the agent"
     },
     {
-     "t": "The prompt tells the agent to be careful with other agents' requests",
+     "t": "Only instructions: the agent is told to be careful with other agents' requests",
      "s": "model",
      "o": "",
      "i": "Only the model decides whom to obey"
     },
     {
-     "t": "The sender is authenticated, but nothing checks whether it may ask for that specific action",
+     "t": "We know for sure which agent sent it, but any known agent can ask for anything",
      "s": "partial",
      "o": "You",
-     "i": "Known senders, but any of them can ask for anything"
+     "i": "A known agent that's been hijacked can ask for anything"
     },
     {
-     "t": "The sender's identity is authenticated, bound to the request, and authorized outside the model for the specific action, target and relevant parameters; the receiving agent can't accept a forged or substituted sender identity",
+     "t": "We know for sure which agent sent it, and a check outside the model lets each agent ask only for what it's allowed to",
      "s": "held",
      "o": "You",
-     "i": "Only allowed agents can ask for only what they're allowed to ask"
+     "i": "Each agent can ask only for what it's allowed to"
     },
     {
      "t": "Don't know",
@@ -3265,47 +3265,47 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g2",
    "step": "agents",
-   "title": "When this agent hands work to another agent or a sub-agent, what keeps the receiver within the task it was given?",
-   "desc": "This includes sub-agents your own code starts, harness sub-agents, and separate agents reached through A2A or another protocol. The receiver may have broader access than the task it was given. Answer for the least limited hand-off.",
+   "title": "When this agent hands off work, what stops the receiving agent from doing more than the task needs?",
+   "desc": "For example, you ask a sub-agent to summarize one folder, but it can read the whole drive. Answer for the least limited hand-off.",
    "cond": "merges the old G2 and G3",
    "a": [
     {
-     "t": "The receiver uses its own access, which can be broader than the original task's",
+     "t": "Nothing. The receiving agent uses its own access, which can be more than the task needs",
      "s": "open",
      "o": "",
-     "i": "Handing work off can grant more authority than the original caller had"
+     "i": "It can do more than whoever handed off the work could"
     },
     {
-     "t": "The model is told to pass the limits along",
+     "t": "Only instructions: the agent is told to pass the limits along",
      "s": "model",
      "o": "",
-     "i": "The limits exist only as text the receiver may ignore"
+     "i": "The limits are only text the receiving agent may ignore"
     },
     {
-     "t": "A guard model checks the delegated task against the original limits",
+     "t": "Another model checks the handed-off task against the limits",
      "s": "guard",
      "o": "You",
      "i": "A second model decides, and it can be fooled too"
     },
     {
-     "t": "Limits are passed along, but only some are enforced by the receiver, or only on some hand-off routes",
+     "t": "Some limits are enforced outside the model, but not all of them, or not on every hand-off",
      "s": "partial",
      "o": "You",
-     "i": "Some hand-offs widen authority"
+     "i": "Some hand-offs still get more access than they need"
     },
     {
-     "t": "{H} applies the session's permission rules and hooks to sub-agents, but doesn't bind their authority to the delegated task or an expiry",
+     "t": "{H}'s usual permission rules and hooks apply to sub-agents, but nothing limits them to this task or ends their access when it's done",
      "s": "partial",
      "o": "{H}",
-     "i": "Session-wide limits carry over, but not the delegated task's scope",
+     "i": "Your general limits carry over, but not the task's narrower ones",
      "h": true,
-     "eqt": "Limits are passed along, but only some are enforced by the receiver, or only on some hand-off routes"
+     "eqt": "Some limits are enforced outside the model, but not all of them, or not on every hand-off"
     },
     {
-     "t": "Every hand-off carries an authenticated initiating caller identity, a task-specific scope (including resources and targets) and an expiry; the receiver and its downstream tools enforce those restrictions on every operation and further delegation, so the receiver can't exceed the original caller's authority or the delegated task's scope",
+     "t": "Each hand-off is limited to its task: what it may touch, and for how long. This is enforced outside the model on every action, including work it hands on again",
      "s": "held",
      "o": "You",
-     "i": "Authority can only shrink as work is passed along, never grow"
+     "i": "Access can only shrink as work is passed along, never grow"
     },
     {
      "t": "Don't know",
@@ -3316,7 +3316,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    ],
    "fix": null,
    "guide": null,
-   "hn": "Check whether a sub-agent definition can add tools or servers the main agent doesn't have. If it can, that's 'its own access, which can be broader'.",
+   "hn": "Check whether a sub-agent definition can add tools or servers the main agent doesn't have. If it can, the receiving agent uses its own access, which can be more than the task needs.",
    "wc": {
     "claude": {"t": "Sub-agent tools and disallowedTools; mcpServers can give a sub-agent servers the main conversation doesn't have (plugin sub-agents ignore it). Sub-agents generally inherit the parent's permission mode, and the parent's mode can override the one a sub-agent sets. omitClaudeMd skips user, project and local CLAUDE.md files, but managed policy files still load; CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH limits nesting.", "src": ["https://code.claude.com/docs/en/sub-agents.md"]},
     "codex": "Sub-agents inherit the parent's sandbox policy; sandbox_mode and approval_policy in a custom agent file don't override it.",
@@ -3328,41 +3328,41 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g3",
    "step": "agents",
-   "title": "Are your critical constraints on delegated work enforced even if the receiver never gets or follows your instructions?",
-   "desc": "",
+   "title": "Do your approvals and limits still apply to work you hand off?",
+   "desc": "For example, a payment needs a person's approval in your agent. When a sub-agent makes the payment, is it still blocked until that approval happens?",
    "cond": null,
    "a": [
     {
-     "t": "No: your rules are only in your agent's instructions, and the receiver doesn't get them",
+     "t": "No. The rules are only in your agent's instructions, and the receiving agent never sees them",
      "s": "open",
      "o": "",
-     "i": "Delegated work runs without your critical rules"
+     "i": "Handed-off work runs without your rules"
     },
     {
-     "t": "The delegating agent is told to include the rules, but decides what to pass along",
+     "t": "Your agent is told to pass the rules along, but it decides what to include",
      "s": "open",
      "o": "",
-     "i": "The rules may not arrive at all"
+     "i": "The rules may never arrive"
     },
     {
-     "t": "The system adds the rules to every receiver's instructions, independent of the model",
+     "t": "Only instructions: the rules are always added to the receiving agent's instructions, but it still has to follow them",
      "s": "model",
      "o": "",
-     "i": "The rules arrive, but only the receiver's model follows them"
+     "i": "The rules arrive, but only the receiving model keeps to them"
     },
     {
-     "t": "{H} loads its main instruction files into sub-agents, but those instructions still depend on each receiving model following them",
+     "t": "Only instructions: {H} loads your instruction files into sub-agents, but each one still has to follow them",
      "s": "model",
      "o": "",
      "i": "The rules arrive, but only the model keeps to them",
      "h": true,
-     "eqt": "The system adds the rules to every receiver's instructions, independent of the model"
+     "eqt": "Only instructions: the rules are always added to the receiving agent's instructions, but it still has to follow them"
     },
     {
-     "t": "The receiver's actions are subject to the same applicable authorization, approval and cumulative-limit controls as the original agent, enforced outside the model across all tools and downstream hand-offs. Critical rules remain protected even if the receiver never receives or follows their instructions",
+     "t": "Yes. The same approvals and limits are enforced outside the model for the receiving agent too, on every tool and every further hand-off",
      "s": "held",
      "o": "You",
-     "i": "Critical rules hold even if the receiver ignores them"
+     "i": "Your rules hold even if the receiving agent ignores them"
     },
     {
      "t": "Don't know",
@@ -3382,21 +3382,21 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g4",
    "step": "agents",
-   "title": "When a sub-agent returns results, how are those results treated?",
-   "desc": "Include summaries, messages, tool results and structured data returned by sub-agents. A sub-agent may have read untrusted content and relay its instructions or claims.",
+   "title": "How are results from a sub-agent or other agent treated?",
+   "desc": "Results are what comes back: summaries, messages and data. A sub-agent may have read untrusted content and can pass its instructions back to your agent.",
    "cond": null,
    "a": [
     {
-     "t": "The main agent acts on them like its own reasoning",
+     "t": "Your agent acts on them as if it had worked them out itself",
      "s": "open",
      "o": "",
-     "i": "A sub-agent that read hostile content can steer the main agent"
+     "i": "A sub-agent that read hostile content can steer your agent"
     },
     {
-     "t": "The main agent is told to treat them as untrusted",
+     "t": "Only instructions: your agent is told to treat them as untrusted",
      "s": "model",
      "o": "",
-     "i": "Only the model's judgment separates results from instructions"
+     "i": "Only the model's judgment keeps results from acting like instructions"
     },
     {
      "t": "Another model checks the results before they're used",
@@ -3405,10 +3405,10 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "A second model decides, and it can be fooled too"
     },
     {
-     "t": "Results are accepted only through a constrained, validated interface. Untrusted text cannot become trusted instructions, and any action based on returned data is independently authorized and checked by the applicable controls",
+     "t": "Results come back as data in a fixed format, kept apart from instructions, and anything your agent does with them still goes through the usual checks outside the model",
      "s": "held",
      "o": "You",
-     "i": "Returned text can't become instructions, and actions based on it are checked independently"
+     "i": "Returned content is treated as data, and actions based on it are checked independently"
     },
     {
      "t": "Don't know",
@@ -3419,7 +3419,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    ],
    "fix": null,
    "guide": null,
-   "hn": "Sub-agents return their results as content in the main agent's context. Unless you've added a constrained interface, that's 'acts on them like its own reasoning'. A constrained interface can validate structure, but it doesn't establish that the returned information is true.",
+   "hn": "Sub-agents return their results as content in the main agent's context. Unless you've added a constrained interface, your agent acts on them as if it had worked them out itself. A fixed format checks structure; it doesn't make the content true.",
    "wc": {
     "claude": {"t": "Claude Code labels sub-agent results as carrying no authority, and auto mode's classifier reviews them; that's model-level handling, not a constrained interface.", "src": ["https://code.claude.com/docs/en/sub-agents.md"]},
     "hermes": {"t": "Hermes passes only a sub-agent's final summary into the parent's context, and a task can set an output_schema, which constrains structure, not truth.", "src": ["https://hermes-agent.nousresearch.com/docs/user-guide/features/delegation"]}
@@ -3976,13 +3976,21 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     a0: { id: "a0", title: "What kind of changes can the agent make?", why: "Decides which questions follow; not scored.", opts: [
       ["code", "Code or files", "Edits files, writes code, commits, opens pull requests."],
       ["outside", "Outside systems", "Sends messages, updates or deletes records, deploys, makes payments, or calls APIs that change data."],
-      ["both", "Both"]] }
+      ["both", "Both"]] },
+    g0: { id: "g0", multi: true, title: "How does this agent work with other agents?", why: "Tick all that apply. Decides which questions follow; not scored.", opts: [
+      ["sub", "It starts its own sub-agents", "Helper agents your code or harness launches to do part of a task."],
+      ["out", "It hands work to other agents", "Separate agents, such as another team's or a vendor's."],
+      ["in", "Other agents send it requests", "Another agent can ask this one to do something."]] }
   };
 
   function hz(s) { return !!s.built && s.built !== "custom"; }
   function H(s) { return HARNESS[s.built] || "the harness"; }
   function cap(s, k) { return hz(s) && k === "t1" ? true : !!(s.caps && s.caps[k]); }
   function inc(v, k) { return Array.isArray(v) && (v.indexOf(k) >= 0 || (k !== "none" && v.indexOf("notsure") >= 0)); }
+  // G0 sorts the "Other agents" step. Until it's answered, every question stays, as it did before G0 existed.
+  function agentsAll(a) { return !Array.isArray(a.g0) || !a.g0.length; }
+  function agentsIn(a) { return agentsAll(a) || a.g0.indexOf("in") >= 0; }
+  function agentsOut(a) { return agentsAll(a) || a.g0.indexOf("sub") >= 0 || a.g0.indexOf("out") >= 0; }
   function third(v) { return inc(v, "official") || inc(v, "community"); }
   function multiTen(s) { return s.ten === "perorg" || s.ten === "mtiso" || s.ten === "mtshared"; }
   function stOf(id, a, s) { var o = ansObj(id, a, s); return o ? o.s : null; }
@@ -4014,7 +4022,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       qs: [["a0"], ["a1", function (s, a) { return a.a0 === "code" || a.a0 === "both"; }, "Asked when it changes code or files."], ["a2", function (s, a) { return a.a0 === "code" || a.a0 === "both"; }, "Asked when it changes code or files."],
            ["a3", function (s, a) { return a.a0 === "outside" || a.a0 === "both"; }, "Asked when it changes outside systems."], ["a4", function (s, a) { return a.a0 === "outside" || a.a0 === "both"; }, "Asked when it changes outside systems."],
            ["a6", function (s, a) { return a.a0 === "outside" || a.a0 === "both"; }, "Asked when it changes outside systems."], ["a7", function (s, a) { return !!a.a0; }, "Asked once you say what it changes."], ["a8", function (s, a) { return !!a.a0; }, "Asked once you say what it changes."], ["a9", function (s, a) { return !!a.a0; }, "Asked once you say what it changes."]] },
-    { k: "agents", name: "Other agents", desc: "Requests from other agents, work handed to them, and results that come back.", when: function (s) { return cap(s, "t11"); }, skip: "You didn't tick “Works with other agents”.", qs: [["g1"], ["g2"], ["g3"], ["g4"]] },
+    { k: "agents", name: "Other agents", desc: "Requests from other agents, work handed to them, and results that come back.", when: function (s) { return cap(s, "t11"); }, skip: "You didn't tick “Works with other agents”.", qs: [["g0"], ["g1", function (s, a) { return agentsIn(a); }, "Asked when other agents send it requests."], ["g2", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."], ["g3", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."], ["g4", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."]] },
     { k: "oversight", name: "Oversight", desc: "Whether you can reconstruct, stop, revoke, recover and get alerted, and what the agent depends on.", when: function () { return true; },
       qs: [["o1"], ["o2"], ["o3"], ["o4"], ["o5", function (s) { return cap(s, "t7"); }, "Asked when the agent uses memory."], ["o6"], ["o7"], ["o8"], ["o9"]], box: ["o1", "o2", "o3", "o4", "o5", "o9"] }
   ];
@@ -4267,13 +4275,12 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       });
       lab.appendChild(inp);
       var sp = el("span", null, b[0] === "unknown" && m.length === 1 ? m[0].t : b[1]);
-      if (m.length === 1 && b[0] !== "unknown") { if (m[0].h) sp.appendChild(el("span", "tagline", "harness")); sp.appendChild(el("small", "odesc", m[0].t)); }
-      else if (b[2]) sp.appendChild(el("small", "odesc", b[2]));
-      if (m.length === 1 && m[0].d && current === m[0].v) sp.appendChild(el("small", "odesc oimp", m[0].d));
+      if (b[2]) sp.appendChild(el("small", "odesc", b[2]));
       lab.appendChild(sp); step.appendChild(lab);
-      if (bk === b[0] && m.length > 1) {
-        var sub = el("fieldset", "tsub opts"), l2b = el("legend", "tlabel", "Which fits best?"); l2b.id = "tl2-" + id; sub.setAttribute("aria-labelledby", t.id + " " + l2b.id); sub.appendChild(l2b);
-        if (cur && bucketOf(cur.s) !== b[0]) sub.appendChild(el("p", "tnote", "Your current answer: \u201C" + cur.t + "\u201D. Pick one below to replace it."));
+      // The chosen status always opens its answers underneath: one answer shows as already chosen, several to pick from.
+      if (bk === b[0] && b[0] !== "unknown") {
+        var sub = el("fieldset", "tsub opts"), l2b = el("legend", "tlabel", m.length > 1 ? "Which fits best?" : "Your answer"); l2b.id = "tl2-" + id; sub.setAttribute("aria-labelledby", t.id + " " + l2b.id); sub.appendChild(l2b);
+        if (cur && bucketOf(cur.s) !== b[0]) sub.appendChild(el("p", "tnote", "You answered \u201C" + cur.t + "\u201D. Choose one below to change it."));
         m.forEach(function (o) {
           var l2 = el("label", "opt" + (current === o.v ? " on" : "")), i2 = el("input");
           i2.type = "radio"; i2.name = "q-" + id; i2.id = "q-" + id + "-" + o.v; i2.value = o.v; i2.checked = current === o.v;
@@ -5614,7 +5621,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       want: { i3: 3, i6: 2, c1: 6, c3: 6, t1: 3, t3: 3, t4: 3, t5: 2, t6: 4, t7: 3, x1: 3, x2: 3, x3: 4, x4: 3, x5: 3, x6: 2, x7: 4, a1: 5, a2: 3, a3: 5, a4: 5, a6: 3, a7: 3, a8: 3, o1: 4, o2: 4, o3: 2, o4: 3, o6: 3, o7: 5, o8: 3, o9: 4, a9: "held" } },
     { name: "Mixed-control agent", blurb: "A per-organization agent with MCP servers, skills and sub-agents, and several gaps and unknowns.",
       shape: { built: "custom", stage: "built", ten: "perorg", sens: "dk", caps: { t1: true, t2: true, t3: true, t6: true, t7: true, t10: true, t11: true } },
-      route: { i1: ["files", "some"], i4: "yes", t2: ["files", "dk"], p1: ["community"], k1: ["notsure"], a0: "outside" },
+      route: { i1: ["files", "some"], i4: "yes", t2: ["files", "dk"], p1: ["community"], k1: ["notsure"], a0: "outside", g0: ["sub", "in"] },
       want: { i2: 3, i3: 2, i5: 3, i6: 3, c1: 3, c3: 8, m1: 2, m2: 2, m3: 4, m4: 3, u1: 4, u2: 2, u4: 5, u5: 1, t1: 1, t3: 2, t4: 4, t5: 0, t6: 2, t7: 1, p2: 1, p3: 2, p4: 1, p7: 2, k2: 1, k3: 3, k4: 1, k5: 1, k6: 1, k7: 1, a4: 3, a6: 5, a7: 1, a8: 0, g1: 2, g2: 1, g3: 2, g4: 2, o1: 3, o2: 5, o3: 1, o4: 4, o5: 3, o6: 4, o7: 0, o8: 1, a9: "unknown" } }
   ];
   function profileAnswers(p) {
