@@ -3664,13 +3664,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "o1",
    "step": "oversight",
-   "tb": {"open": ["No records", ""], "out": ["Records kept outside the model", "Even if the agent could change them or they miss details."]},
+   "tb": {"open": ["No records", ""], "out": ["Records exist", "Even if the agent could change them or they miss details."]},
    "title": "Can you reconstruct what the agent did from records it can't change?",
    "desc": "A complete record shows, for each action: the tool, the target, the parameters actually used, who or what approved it, the result, the time and an action ID. Count denied and failed attempts, and every route: tools, MCP servers, commands and sub-agents. \"Can't change\" means the agent and its credentials can't edit or delete the records.",
    "cond": null,
    "a": [
     {
-     "t": "No records, or only the model's own summary of what it did",
+     "t": "No: there are no records, or only the agent's own summary of what it did",
      "s": "open",
      "o": "",
      "i": "There's no independent record of what happened"
@@ -3696,7 +3696,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Some actions or details can't be reconstructed"
     },
     {
-     "t": "Protected and complete for every route: written outside the agent's reach, with target, parameters, approver and result",
+     "t": "Protected and complete for every route: written outside the agent's reach, with every detail listed above",
      "s": "held",
      "o": "You",
      "i": "Every action can be reconstructed from evidence the agent can't touch"
@@ -3739,7 +3739,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "It stops only if the model obeys"
     },
     {
-     "t": "A stop control outside the model halts the main agent, but some work it started keeps running",
+     "t": "Main agent only: it halts the main agent, but some work it started keeps running",
      "s": "partial",
      "o": "You",
      "i": "Work it started keeps running after the stop"
@@ -3751,11 +3751,11 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "The main agent stops, but work it started may continue",
      "h": true,
      "att": true,
-     "eqt": "A stop control outside the model halts the main agent, but some work it started keeps running",
+     "eqt": "Main agent only: it halts the main agent, but some work it started keeps running",
      "over": true
     },
     {
-     "t": "A stop control outside the model halts the agent and all work it has started, prevents pending work from executing or restarting, and nothing new starts until a person resumes it",
+     "t": "Everything: it halts the agent and all work it started, nothing pending runs or restarts, and nothing new starts until a person resumes it",
      "s": "held",
      "o": "You",
      "i": "Everything stops and stays stopped until a person resumes it"
@@ -3841,7 +3841,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "eqt": "Recovery has gaps: the agent can delete or change the backups, some effects aren't covered (files are, outside systems aren't), backups are too old, or restoring was never tested"
     },
     {
-     "t": "Everything the agent changes can be restored from recent backups it can't touch, restoring has been tested, and actions that can't be undone wait in a delay or cancel step outside the agent first",
+     "t": "Everything the agent changes can be undone, from recent backups it can't touch or by reversing it in the other system; undoing has been tested, and actions that can't be undone wait in a delay or cancel step outside the agent first",
      "s": "held",
      "o": "You",
      "i": "Every effect can be reversed, or stopped before it lands"
@@ -3893,7 +3893,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "eqt": "A person can view the contents, but there's no source information"
     },
     {
-     "t": "Entries carry a source, but only the agent's own claim of it",
+     "t": "Only the agent's word: each entry lists a source, but the agent writes it itself",
      "s": "model",
      "o": "",
      "i": "Sources can be faked by the content that wrote them"
@@ -3930,13 +3930,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Anything the agent reads is sent, and nobody has checked the provider's terms",
+     "t": "No: anything the agent reads is sent, and nobody has checked the provider's terms",
      "s": "open",
      "o": "",
      "i": "Any data the agent sees may be kept or used under terms nobody checked"
     },
     {
-     "t": "The agent is told to keep sensitive data from other models it uses (sub-agents, embeddings, MCP servers)",
+     "t": "Only an instruction: the agent is told to keep sensitive data from other models it uses (sub-agents, embeddings, MCP servers)",
      "s": "model",
      "o": "",
      "i": "Only the model's judgment keeps data from providers"
@@ -4043,7 +4043,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Version ranges or \"latest\", installed fresh at each build or start",
+     "t": "Yes: version ranges or \"latest\" are installed fresh at each build or start",
      "s": "open",
      "o": "",
      "i": "Whatever is published next runs as your agent"
@@ -4055,7 +4055,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Some components change without review"
     },
     {
-     "t": "{H} updates itself automatically",
+     "t": "Your own parts are pinned, but {H} updates itself automatically",
      "hs": ["claude", "codex", "cursor", "openclaw", "otherh"],
      "s": "partial",
      "o": "{H}",
@@ -4064,7 +4064,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "eqt": "Versions are pinned, but some change without review: bots auto-merge updates, the base image uses a tag rather than a digest, transitive dependencies float, or the harness updates itself"
     },
     {
-     "t": "Every part of the agent, including all dependencies, the base image and the harness, is pinned and checked against an approved source, and any change is reviewed and tested first",
+     "t": "Every part of the agent, including all dependencies, the base image and the harness, is pinned by hash or digest and comes from an approved source, and any change is reviewed and tested first",
      "s": "held",
      "o": "You",
      "i": "Only reviewed, verified software runs"
@@ -4090,6 +4090,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "id": "o9",
    "step": "oversight",
    "tb": {"open": ["No", ""], "model": ["The agent reports itself", ""], "out": ["Alerts, or a person watching", "Even if only some problems are caught."]},
+   "grp": [["no", "", "", [0]], ["told", "", "", [1]], ["alerts", "Alerts, or a person watching", "Even if only some problems are caught.", [6, 3, 2, 4]], ["unknown", "", "", [5]]],
    "title": "Does suspicious activity alert someone who can act on it?",
    "desc": "Suspicious activity includes unusual call volume, records outside the usual pattern, repeated denied actions, a new tool or destination, or sensitive data leaving. \"Someone who can act\" means a person able to stop the agent or revoke its access, reached within a time you've set.",
    "cond": null,
@@ -4101,7 +4102,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Problems are found by chance, if at all"
     },
     {
-     "t": "The agent is told to report problems itself",
+     "t": "Only an instruction: the agent is told to report problems itself",
      "s": "model",
      "o": "",
      "i": "The agent decides what you hear about"
