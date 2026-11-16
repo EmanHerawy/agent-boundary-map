@@ -2135,7 +2135,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Anyone or anything that can write to a loading folder or the config, including the agent itself",
+     "t": "Anyone or anything that can write to a loading folder or the config (including the agent itself), or a remote source your code loads them from",
      "s": "open",
      "o": "",
      "i": "New instructions or automatic code can join the agent with no one deciding"
@@ -2183,7 +2183,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "k3",
    "step": "skills",
-   "tb": {"open": ["Nothing, or only a warning", "Nobody and nothing checks the contents."], "out": ["Reviewed or scanned", "A person or a scan checks items, even if only partly or not always."]},
+   "grp": [["none", "Nothing, or only a warning", "Nobody and nothing checks the contents.", [0, 1]], ["review", "Reviewed or scanned", "A person or a scan checks items, even if only partly or not always.", [2, 6, 3, 7, 4]], ["unknown", "", "", [5]]],
    "title": "Before a third-party skill, plugin or hook is enabled or updated, what gets reviewed?",
    "desc": "They reach the agent in four ways: instruction text (skill files and plugin rules become the agent's instructions, and can hide text reviewers don't see), code (scripts the agent may run, hooks the harness runs automatically), bundled components and permissions (MCP servers, allowed commands, settings), and setup or prerequisite steps the item asks anyone to run, the agent or a person.",
    "cond": "shown for official and community items",
@@ -2302,7 +2302,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Yes: skills or plugins can pre-approve tools or commands, or change permission settings",
+     "t": "Yes: skills or plugins can pre-approve tools or commands that would otherwise need approval, or change permission settings",
      "s": "open",
      "o": "",
      "i": "Installing a skill can quietly switch off approvals for what it lists"
@@ -2346,7 +2346,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "custom agents only",
    "a": [
     {
-     "t": "A full or unsafe loader is used, such as Python yaml.load with an unsafe loader, or a JavaScript YAML loader configured to construct executable objects",
+     "t": "A loader that can build objects or run code from the file, such as Python's yaml.load with an unsafe loader",
      "s": "open",
      "o": "",
      "i": "A malicious skill file may execute code while its metadata is being parsed, before the model receives or interprets its instructions"
@@ -2389,7 +2389,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Everywhere: installed items load in every project and session",
+     "t": "Everywhere: installed items are available in every project and session, and can load there",
      "s": "open",
      "o": "",
      "i": "A skill meant for personal or experimental work runs inside sensitive projects too"
