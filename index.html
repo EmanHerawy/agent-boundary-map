@@ -2809,13 +2809,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "w1",
    "step": "browser",
-   "tb": {"open": ["Your everyday profile", ""], "out": ["A separate profile", "Even if it still has some sign-ins or saved details."]},
+   "tb": {"open": ["A profile you also use", ""], "out": ["A separate profile", "Even if it still has some sign-ins or saved details."]},
    "title": "What is the agent's browser signed in to, and what does it have saved?",
-   "desc": "A browser profile carries more than login credentials. Consider logged-in sessions, saved passwords and payment details, open tabs and their contents, browsing history, and installed extensions. Each is exposure on its own. In Guardio's test, an agent paid a fake shop with the browser's saved card. Answer for the profile the agent actually uses.",
+   "desc": "A browser profile carries more than login credentials. Consider logged-in sessions, saved passwords and payment details, open tabs and their contents, browsing history, and installed extensions. Each is exposure on its own. In Guardio's test, an agent went through checkout on a fake shop with the browser's saved card. Answer for the profile the agent actually uses.",
    "cond": null,
    "a": [
     {
-     "t": "Your everyday profile, with your sign-ins, saved passwords or payment details",
+     "t": "A profile you also use yourself, with your sign-ins, saved passwords or payment details",
      "s": "open",
      "o": "",
      "i": "Any page the agent reaches can lead it to act as you, with your money and accounts"
@@ -2826,7 +2826,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "The agent can act in every site you're signed into",
      "h": true,
-     "eqt": "Your everyday profile, with your sign-ins, saved passwords or payment details",
+     "eqt": "A profile you also use yourself, with your sign-ins, saved passwords or payment details",
      "hs": ["claude", "codex", "openclaw"],
      "over": true
     },
@@ -2837,7 +2837,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Less exposed, but a fake site can still reach what's saved"
     },
     {
-     "t": "A separate profile with only the sign-ins the task needs, no saved passwords or payment details, and only reviewed extensions",
+     "t": "A separate profile, signed in only to the accounts the task needs, with no saved passwords or payment details, and only reviewed extensions",
      "s": "held",
      "o": "You",
      "i": "Pages can't use authority the task doesn't need"
@@ -2863,9 +2863,9 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "w2",
    "step": "browser",
-   "tb": {"open": ["Nothing", "Nothing stops it for at least one action, or on a site you've allowed."], "model": ["The agent is told to ask", ""], "guard": ["A guard model reviews it", ""], "out": ["A person approves, or sites are limited", "A step the agent can't skip, or the browser can reach only approved sites."]},
+   "grp": [["notall", "Not every action is checked", "At least one action can go ahead without a check, including on sites you've allowed.", [0, 4]], ["told", "", "", [1]], ["guard", "", "", [2]], ["person", "A person approves", "In a step the agent can't skip.", [3, 5]], ["sites", "", "", [7]], ["unknown", "", "", [6]]],
    "title": "Before the browser does something that matters, what has to happen?",
-   "desc": "Actions that matter: entering credentials, paying, submitting forms with personal data, downloading files, uploading files, changing account settings, granting site permissions (camera, microphone, location, notifications, clipboard). In Guardio's tests, the agent helped fill a fake bank login and clicked a hidden-text \"captcha\" that downloaded a file, without asking. Answer for the least protected action the browser can actually do.",
+   "desc": "Actions that matter: entering credentials, paying, submitting forms with personal data, downloading files, uploading files, changing account settings, sending messages or posting content, granting site permissions (camera, microphone, location, notifications, clipboard). In Guardio's tests, the agent helped fill a fake bank login and clicked a hidden-text \"captcha\" that downloaded a file, without asking. Answer for the least protected action the browser can actually do.",
    "cond": null,
    "a": [
     {
@@ -2887,7 +2887,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "The guard model decides, and it can be fooled too"
     },
     {
-     "t": "A step the agent can't skip covers every listed action, but doesn't show the actual site and details",
+     "t": "A person approves every listed action in a step the agent can't skip, but the approval doesn't show the actual site and details",
      "s": "partial",
      "o": "You or {H}",
      "i": "The obvious action is gated; the others, or the details, aren't"
@@ -2903,7 +2903,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "att": true
     },
     {
-     "t": "Every listed action needs a person's approval the agent can't skip, showing the verified site, the action and its details (data to submit, payment amount and recipient, or file and destination); each approval covers only that action",
+     "t": "Every listed action needs a person's approval the agent can't skip, showing the real final site (after any redirects), the action and its details (data to submit, payment amount and recipient, or file and destination); each approval covers only that action",
      "s": "held",
      "o": "Person",
      "i": "Nothing that matters happens without a person seeing exactly where and what"
@@ -2932,13 +2932,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "w3",
    "step": "browser",
-   "tb": {"open": ["Others can reach it", ""], "out": ["Local only, or private", "Only programs on the machine, or only the agent's own process."]},
+   "tb": {"open": ["Others can reach it", ""], "out": ["Not reachable from other machines", "Any local program can connect, or only the agent."]},
    "title": "Who else can control the agent's browser?",
-   "desc": "Agent browser tools usually drive the browser through a control channel, typically the Chrome DevTools Protocol over a debugging port. Whoever can reach that channel controls the browser with all its logged-in sessions.",
+   "desc": "Agent browser tools usually drive the browser through a control channel, typically the Chrome DevTools Protocol over a debugging port. Whoever can reach that channel can potentially control the browser and act through its logged-in sessions.",
    "cond": null,
    "a": [
     {
-     "t": "Its control channel (e.g. a debugging port) is reachable by other local programs or the network",
+     "t": "Its control channel (for example, a debugging port) can be reached from other machines on the network",
      "s": "open",
      "o": "",
      "i": "Anyone who reaches the port gets the browser's sessions"
@@ -2950,7 +2950,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Any program on the machine can take over the browser"
     },
     {
-     "t": "Only the agent's own process can reach it: a private pipe, an authenticated channel, or an isolated environment",
+     "t": "Only the agent can send the browser commands; other local programs can't (a private pipe, an authenticated channel or an isolated environment)",
      "s": "held",
      "o": "You or {H}",
      "i": "Nobody else can drive the browser"
