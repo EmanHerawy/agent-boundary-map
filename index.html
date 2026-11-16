@@ -3434,31 +3434,31 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g1",
    "step": "agents",
-   "tb": {"open": ["Nothing", ""], "model": ["Your agent is told to be careful", ""], "out": ["The sender is verified", "You know for sure which agent sent it, even if any known agent can ask for anything."]},
+   "tb": {"open": ["Nothing", ""], "model": ["Your agent is told to be careful", ""], "out": ["The sender's identity is checked", "You know for sure which agent sent it, even if nothing limits what it can ask for."]},
    "title": "What limits what other agents can ask your agent to do?",
    "desc": "For example, your billing agent may ask for refunds, but your chat agent may not. Count every way requests arrive (a protocol such as A2A, a queue, a shared channel) and answer for the least protected one.",
    "cond": "Other agents step",
    "a": [
     {
-     "t": "Requests from other agents are trusted because they come from inside",
+     "t": "Nothing: requests from other agents are trusted because they come from inside",
      "s": "open",
      "o": "",
      "i": "Anyone who can send on that channel can command the agent"
     },
     {
-     "t": "Your agent is told to be careful with other agents' requests",
+     "t": "Only an instruction: your agent is told to be careful with other agents' requests",
      "s": "model",
      "o": "",
      "i": "Only the model decides whom to obey"
     },
     {
-     "t": "We know for sure which agent sent it, but any known agent can ask for anything",
+     "t": "Identity only: nothing limits what each sender can ask for",
      "s": "partial",
      "o": "You",
      "i": "A known agent that's been hijacked can ask for anything"
     },
     {
-     "t": "We know for sure which agent sent it, and a check outside the model lets each agent ask only for what it's allowed to",
+     "t": "Identity and permissions: code outside the agent lets each sender ask only for what it's allowed to",
      "s": "held",
      "o": "You",
      "i": "Each agent can ask only for what it's allowed to"
@@ -3489,13 +3489,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "A small task can touch everything the other agent can reach"
     },
     {
-     "t": "Your agent tells it the task's limits, but nothing enforces them",
+     "t": "Only an instruction: the other agent is told to stay within the task, and nothing stops it doing more",
      "s": "model",
      "o": "",
      "i": "The limits are only text the other agent may ignore"
     },
     {
-     "t": "A guard model checks what it does against the task's limits",
+     "t": "A guard model checks that what it does stays within the task",
      "s": "guard",
      "o": "You",
      "i": "The guard model decides, and it can be fooled too"
@@ -3542,13 +3542,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g3",
    "step": "agents",
-   "tb": {"open": ["No", "Your rules never reach the other agent, or it can use tools your rules don't cover."], "model": ["Only as instructions", "Your rules reach it as text, and a model has to follow them."], "out": ["Enforced outside the model", "The same approvals and limits apply to it, even if only some of them."]},
-   "title": "Does the other agent have to follow your agent's approvals and limits?",
-   "desc": "Example: a payment needs a person's approval in your agent. If the other agent makes the payment, does it still need that approval? This includes other agents that bring tools, servers or credentials your agent doesn't have. Answer for the least protected hand-off.",
+   "grp": [["no", "No", "Your rules never reach it, or it has tools your rules don't cover.", [0, 6]], ["instr", "Only as instructions", "Your rules reach it as text, and a model has to follow them.", [1, 2, 3]], ["enforced", "Enforced outside the model", "Code or settings apply your rules to it, even if only some of them.", [7, 4]], ["unknown", "", "", [5]]],
+   "title": "Does the other agent have to follow your agent's rules?",
+   "desc": "Your agent's rules are its instructions, approvals and limits. Examples: your agent is told \"never delete production data\", or a payment needs a person's approval. If the other agent does the work, do those rules still apply? This includes other agents that bring tools, servers or credentials your agent doesn't have. Answer for the least protected hand-off.",
    "cond": null,
    "a": [
     {
-     "t": "Your rules are only in your agent's instructions, and the other agent never sees them",
+     "t": "Your rules are only in your agent's instructions, and they're never passed to the other agent",
      "s": "open",
      "o": "",
      "i": "Handed-off work runs without your rules"
@@ -3576,7 +3576,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "over": true
     },
     {
-     "t": "Yes: the same approvals and limits are enforced on the other agent outside the model, on every tool and further hand-off, and it can't use tools your limits don't cover",
+     "t": "Yes: every rule that limits what it can do, including approval requirements and limits, is enforced on the other agent outside the model (for example, it has no permission to delete production data), on every tool and further hand-off, and it can't use tools or credentials outside them",
      "s": "held",
      "o": "You",
      "i": "Your rules hold even if the receiving agent ignores them"
@@ -3588,13 +3588,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": ""
     },
     {
-     "t": "The other agent can use tools, servers or credentials your agent doesn't have, outside your approvals and limits",
+     "t": "The other agent has its own tools or accounts that your rules don't cover (for example, a sub-agent with its own payment tool that never asks for approval)",
      "s": "open",
      "o": "",
      "i": "Handed-off work can do what your agent isn't allowed to"
     },
     {
-     "t": "Some of your approvals and limits are enforced on the other agent outside the model, but not all (for example approvals, but not spending limits)",
+     "t": "Some of your rules are enforced on the other agent outside the model, but not all (for example approvals, but not spending limits)",
      "s": "partial",
      "o": "You",
      "i": "Some of your rules hold for handed-off work, not all"
@@ -3611,31 +3611,31 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "g4",
    "step": "agents",
-   "tb": {"open": ["As its own reasoning", "Your agent acts on what comes back, free text included."], "model": ["It's told to distrust them", ""], "guard": ["A guard model checks them", ""], "out": ["Only checked fields come back", ""]},
+   "grp": [["own", "", "", [0]], ["freetext", "", "", [5]], ["told", "", "", [1]], ["guard", "", "", [2]], ["fields", "", "", [3]], ["unknown", "", "", [4]]],
    "title": "How does your agent treat what the other agent sends back?",
    "desc": "Results are summaries, messages and data. The other agent may have read untrusted content and can pass its instructions back to your agent.",
    "cond": null,
    "a": [
     {
-     "t": "Your agent acts on them as if it worked them out itself",
+     "t": "Your agent trusts what comes back and acts on it",
      "s": "open",
      "o": "",
      "i": "A sub-agent that read hostile content can steer your agent"
     },
     {
-     "t": "Your agent is told to treat them as untrusted",
+     "t": "Only an instruction: your agent is told to treat what comes back as untrusted",
      "s": "model",
      "o": "",
      "i": "Only the model's judgment keeps results from acting like instructions"
     },
     {
-     "t": "A guard model checks the results before they're used",
+     "t": "A guard model checks what comes back before your agent uses it",
      "s": "guard",
      "o": "You",
      "i": "The guard model decides, and it can be fooled too"
     },
     {
-     "t": "Results come back only as checked fields (yes/no, amounts, IDs); no free text reaches the model that decides",
+     "t": "Results come back only as fixed fields that code checks for type and range (yes/no, amounts, IDs); no free text reaches the model that decides. The values can still be wrong",
      "s": "held",
      "o": "You",
      "i": "Returned content can't carry instructions into your agent"
