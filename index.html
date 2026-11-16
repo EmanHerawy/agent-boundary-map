@@ -1064,7 +1064,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "shown whenever the Memory step appears",
    "a": [
     {
-     "t": "The agent can save anything, including secrets and personal data",
+     "t": "Yes: the agent can save anything, including secrets and personal data",
      "s": "open",
      "o": "",
      "i": "Sensitive data persists and may be exposed in future sessions"
@@ -1076,7 +1076,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "Secrets or personal data can end up in memory",
      "h": true,
-     "eqt": "The agent can save anything, including secrets and personal data",
+     "eqt": "Yes: the agent can save anything, including secrets and personal data",
      "over": true
     },
     {
@@ -1325,7 +1325,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "asked after caller identity",
    "a": [
     {
-     "t": "The agent uses its own access, whoever asks",
+     "t": "Nothing: the agent uses its own access, whoever asks",
      "s": "open",
      "o": "",
      "i": "Any user can reach anything the agent can"
@@ -1384,7 +1384,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "shown for multi-tenant agents and dedicated instances per organization",
    "a": [
     {
-     "t": "Nothing keeps people's data apart",
+     "t": "Yes: nothing keeps people's data apart",
      "s": "open",
      "o": "",
      "i": "Anyone could see anyone else's data"
@@ -1395,7 +1395,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "One person's data can surface in another's session",
      "h": true,
-     "eqt": "Nothing keeps people's data apart"
+     "eqt": "Yes: nothing keeps people's data apart"
     },
     {
      "t": "The agent is told to keep people apart",
@@ -1565,11 +1565,11 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "step": "tools",
    "tb": {"open": ["Yes", ""], "out": ["No", "A person approves every change, or the tool list is fixed for the session."]},
    "title": "During a session, can the agent's tools, servers or skills change without approval?",
-   "desc": "Routes: a connected MCP server changing its tool list, a skill or plugin loading mid-session, or a command or config edit that adds one. Whether a server or skill can be added at all is asked in the MCP and Skills steps. Answer for the least controlled route.",
+   "desc": "Routes: a connected MCP server changing its tool list, a skill or plugin loading mid-session, or a command or config edit that adds one. Whether a server or skill can be added at all is asked in the MCP and Skills steps, and a server that changes what a tool does without changing its name is P3. Answer for the least controlled route.",
    "cond": null,
    "a": [
     {
-     "t": "At least one route needs no approval",
+     "t": "Yes: at least one route needs no approval",
      "s": "open",
      "o": "",
      "i": "The agent can gain new capabilities mid-session"
@@ -1582,7 +1582,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "x": true
     },
     {
-     "t": "A person must approve every addition or change after seeing the exact tools, capabilities and permissions it introduces, regardless of how it's made",
+     "t": "A person must approve every addition or change before it takes effect, after seeing the exact tools, capabilities and permissions it brings",
      "s": "held",
      "o": "Person",
      "i": "Nothing new appears without informed approval"
@@ -1612,31 +1612,31 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "t3",
    "step": "tools",
-   "tb": {"open": ["The model or its commands", "They're in the model's context, or a command can print or fetch them."], "out": ["Only other software, or only the tool", "The model and its commands can't read them."]},
+   "tb": {"open": ["The model or its commands", "It's in the model's context, or a command can print or fetch it."], "out": ["Not the model or its commands", "Something blocks the agent and its commands from reading them."]},
    "title": "Who can read the tools' credentials?",
-   "desc": "Credentials are the API keys, tokens and passwords your tools use. If commands can ask a keychain, secret manager or cloud identity for them, commands can read them. Answer for the most exposed one.",
+   "desc": "Look at the places you ticked in the previous question. Where a credential lives isn't the whole answer: a .env file or an environment variable is readable unless something blocks the agent's commands from it, such as a sandbox rule or a filtered environment. Answer for the most exposed credential.",
    "cond": null,
    "a": [
     {
-     "t": "The model itself: they're in its context (prompt, instruction files, tool output)",
+     "t": "The model itself: they're in its context (the prompt, instruction files or tool output)",
      "s": "open",
      "o": "",
      "i": "One injection can make the agent repeat the key"
     },
     {
-     "t": "Commands the agent runs: they can print the environment variable, read the file, or ask the keychain for it",
+     "t": "Commands the agent runs: they can print the environment variable, open the file, or ask the keychain",
      "s": "open",
      "o": "",
      "i": "One injection can make the agent read the key and send it out"
     },
     {
-     "t": "Other apps or components running as the same user (a third-party MCP server, a skill's script, another app)",
+     "t": "Other software on the same account, such as a third-party MCP server, a hook or another app",
      "s": "partial",
      "o": "You",
      "i": "The model can't read them directly, but another component running with the same user's access may expose them"
     },
     {
-     "t": "Only the tool or service that uses them. The agent, its commands and other apps can't, and it never shows them in output or errors",
+     "t": "Only the tool or service that uses them, and it never shows them in output, errors or logs",
      "s": "held",
      "o": "You",
      "i": "Nobody else can read the credential"
@@ -1660,33 +1660,33 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "t4",
    "step": "tools",
-   "tb": {"open": ["Broad access", "An admin key, a full account, or the signed-in person's own access."], "out": ["Narrowed", "Limited to less than full access."]},
-   "title": "What can each credential reach, and what can it do there?",
-   "desc": "Answer for the broadest credential.",
+   "tb": {"open": ["Broad access", "Much more than the tools need: an admin key, a full account, or a person's own wide access."], "out": ["Narrowed", "Limited to less than full access."]},
+   "title": "What can the agent's broadest credential do?",
+   "desc": "Count every credential the agent's tools use, and answer for the one that can do the most.",
    "cond": null,
    "a": [
     {
-     "t": "Broad access: an admin key, a full account, all repositories",
+     "t": "Broad access: an admin key or a full account, for example all repositories, all customer records or a whole cloud account",
      "s": "open",
      "o": "",
      "i": "A leaked key opens everything"
     },
     {
-     "t": "The agent uses the credentials of the person running {H}: their signed-in command-line tools, environment tokens, and cloud or code-host sessions",
+     "t": "The agent uses the signed-in access of the person running {H} (command-line tools, environment tokens, cloud and code-host sessions), and that person can do much more than the tools need",
      "s": "open",
      "o": "",
      "i": "The agent can do anything that person can",
      "h": true,
-     "eqt": "Broad access: an admin key, a full account, all repositories"
+     "eqt": "Broad access: an admin key or a full account, for example all repositories, all customer records or a whole cloud account"
     },
     {
-     "t": "Narrower than full access, but more than the tool needs",
+     "t": "Narrower than full access, but more than the tool needs (for example, read and write on every repository when the tool only reads one)",
      "s": "partial",
      "o": "You",
      "i": "Damage beyond the tool's job"
     },
     {
-     "t": "Exactly what each tool needs, restricted by resource and operation",
+     "t": "Each credential can do only what its tool needs, limited by resource and operation (for example, read-only on one repository)",
      "s": "held",
      "o": "You",
      "i": "A leaked key only does what that tool does"
@@ -1705,25 +1705,25 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "t5",
    "step": "tools",
-   "tb": {"open": ["Doesn't expire", ""], "out": ["Expires", "On a schedule, or within the session or task."]},
-   "title": "How long does each credential stay valid?",
-   "desc": "Answer for the longest-lived credential.",
+   "tb": {"open": ["Indefinitely", ""], "out": ["It stops working on its own", "After a set time, without anyone having to act."]},
+   "title": "If a credential leaked, how long would it keep working?",
+   "desc": "Answer for the longest-lived credential. Rotating a credential counts only if the old one stops working.",
    "cond": null,
    "a": [
     {
-     "t": "It never expires, or only when someone remembers to rotate it",
+     "t": "Indefinitely: it never expires, and nobody replaces it on a schedule",
      "s": "open",
      "o": "",
      "i": "A leaked key works indefinitely"
     },
     {
-     "t": "It expires or is rotated on a schedule (days to months)",
+     "t": "Days to months: it expires or is replaced on a schedule, and the old one stops working",
      "s": "partial",
      "o": "You",
      "i": "It can be abused until it expires"
     },
     {
-     "t": "Issued per session or task, and expires within minutes or hours",
+     "t": "Minutes or hours: it expires that quickly, and a stolen one can't be renewed (for example, issued for each session or task)",
      "s": "held",
      "o": "You",
      "i": "A leaked key is soon useless"
@@ -1744,17 +1744,17 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "step": "tools",
    "tb": {"open": ["Nothing", ""], "model": ["Only the model's judgment", ""], "guard": ["A guard model reviews results", ""], "out": ["The system doing the action re-checks", ""]},
    "title": "What checks a tool's result before the agent acts on it?",
-   "desc": "Tools can return wrong data: a bug, a hacked backend, or a third-party MCP server lying. Example: a status tool says \"refund approved\" when it wasn't, and the agent then calls the payment tool. Only a check by the system doing the action counts, and only if it asks a source the tool can't influence. Answer for the least protected action that matters.",
+   "desc": "Tools can return wrong data: a bug, a hacked backend, or a third-party MCP server lying. Example: a status tool says \"refund approved\" when it wasn't, and the agent then calls the payment tool. Only a check outside the agent counts: by the system doing the action, or a service it trusts, asking an authoritative source the tool can't alter. Answer for the least protected action that matters.",
    "cond": null,
    "a": [
     {
-     "t": "The agent acts on whatever tools return",
+     "t": "Nothing: the agent acts on whatever tools return",
      "s": "open",
      "o": "",
      "i": "Whoever controls a tool's output controls what the agent does next"
     },
     {
-     "t": "The model is expected to notice results that look wrong",
+     "t": "Only the model: it's expected to notice results that look wrong",
      "s": "model",
      "o": "",
      "i": "Only the model's judgment catches false data"
@@ -1773,7 +1773,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "x": true
     },
     {
-     "t": "For every action that matters, the system carrying it out re-checks the facts and permissions itself, from a source the tool can't influence",
+     "t": "For every action that matters, the system carrying it out, or a service it trusts, re-checks the facts and permissions with an authoritative source the tool can't alter",
      "s": "held",
      "o": "Service",
      "i": "False tool output can't, by itself, authorize a wrong action"
@@ -1792,13 +1792,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "t7",
    "step": "tools",
-   "tb": {"open": ["No, used as given", ""], "model": ["The agent is told to send safe values", ""], "out": ["Tool code checks them", "Each tool has the checks that apply to what it does."]},
-   "title": "Do the tools you built treat the model's arguments as untrusted input?",
-   "desc": "Everything the model passes to a tool can be shaped by injected content: queries, commands, file paths, URLs, and HTML your app displays. Examples: SQL built from text, a shell command built from a filename, ../ in a path, or a URL pointing to an internal service or the cloud metadata service. Answer for the least protected tool.",
+   "grp": [["no", "", "", [0]], ["told", "", "", [1]], ["code", "Tool code checks them", "Each tool has the checks that apply to what it does.", [5, 3]], ["unknown", "", "", [4]]],
+   "title": "Do your own tools and MCP servers check the arguments the model passes to them?",
+   "desc": "Arguments the model chooses can be shaped by injected content: queries, commands, file paths, URLs, and text a tool puts into a web page, such as a comment body. Examples: SQL built from text, a shell command built from a filename, ../ in a path, or a URL pointing to an internal service or the cloud metadata service. Answer for the least protected tool.",
    "cond": "shown for custom agents and when P1 includes \"Servers we built\"; answer for the least protected tool",
    "a": [
     {
-     "t": "Arguments go straight into queries, commands, paths, URLs or HTML",
+     "t": "No: arguments go straight into queries, commands, paths, URLs or web pages",
      "s": "open",
      "o": "",
      "i": "Injected content can run queries or commands, read files or reach internal services through your tool"
@@ -1817,7 +1817,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "x": true
     },
     {
-     "t": "Every tool validates its arguments for what it does: strict schemas and allowlists, parameterized queries, no shell strings, paths kept inside an allowed folder, only listed URLs, and output escaped before display (whichever apply)",
+     "t": "Every tool validates its arguments for what it does: strict schemas and allowlists, parameterized queries, no shell strings, paths kept inside an allowed folder, only listed URLs, and text escaped before it goes into a web page (whichever apply)",
      "s": "held",
      "o": "You",
      "i": "Arguments can't change what the tool does beyond its intended operation"
@@ -2253,7 +2253,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Items update automatically, or can download instructions or code when they run",
+     "t": "Yes: items update automatically, or can download instructions or code when they run",
      "s": "open",
      "o": "",
      "i": "What runs isn't what was reviewed"
@@ -2296,7 +2296,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Skills or plugins can pre-approve tools or commands, or change permission settings",
+     "t": "Yes: skills or plugins can pre-approve tools or commands, or change permission settings",
      "s": "open",
      "o": "",
      "i": "Installing a skill can quietly switch off approvals for what it lists"
@@ -2383,7 +2383,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Installed items load in every project and session",
+     "t": "Everywhere: installed items load in every project and session",
      "s": "open",
      "o": "",
      "i": "A skill meant for personal or experimental work runs inside sensitive projects too"
@@ -2598,7 +2598,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Code can read the home folder or other places that hold credentials",
+     "t": "Yes: code can read the home folder or other places that hold credentials",
      "s": "open",
      "o": "",
      "i": "One malicious script or injected command can collect the credentials on the machine"
@@ -2609,7 +2609,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "Machine-held credentials stay readable through another route",
      "h": true,
-     "eqt": "Code can read the home folder or other places that hold credentials"
+     "eqt": "Yes: code can read the home folder or other places that hold credentials"
     },
     {
      "t": "Some locations are blocked, but others that hold credentials stay readable (cloud CLI config, Git credentials, browser profile, mounted secrets)",
@@ -2619,7 +2619,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "x": true
     },
     {
-     "t": "Code runs under a separate account or in an isolated environment with no secrets beyond the task's inputs",
+     "t": "No: code runs under a separate account or in an isolated environment with no secrets beyond the task's inputs",
      "s": "held",
      "o": "You",
      "i": "There's nothing beyond the task's inputs for code to steal"
@@ -2857,7 +2857,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "The agent does it if a page leads it there",
+     "t": "Nothing: the agent does it if a page leads it there",
      "s": "open",
      "o": "",
      "i": "A page can make the agent log in, pay or download on its own"
@@ -2886,7 +2886,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "The first action on a site is checked; later ones on that site aren't",
      "h": true,
-     "eqt": "The agent does it if a page leads it there",
+     "eqt": "Nothing: the agent does it if a page leads it there",
      "hs": ["claude"],
      "att": true
     },
@@ -3080,7 +3080,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "outside systems",
    "a": [
     {
-     "t": "The agent's credential lets it do anything the system allows",
+     "t": "Nothing: the agent's credential lets it do anything the system allows",
      "s": "open",
      "o": "",
      "i": "Whatever the agent asks for, happens"
@@ -3148,7 +3148,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "outside systems",
    "a": [
     {
-     "t": "The agent goes ahead on its own",
+     "t": "Nobody: the agent goes ahead on its own",
      "s": "open",
      "o": "",
      "i": "One persuaded decision can do lasting damage"
@@ -3210,7 +3210,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "outside systems",
    "a": [
     {
-     "t": "A retry can repeat the action",
+     "t": "Yes: a retry can repeat the action",
      "s": "open",
      "o": "",
      "i": "One request can turn into several real effects"
@@ -3306,7 +3306,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "shown for either branch of A0",
    "a": [
     {
-     "t": "It runs later with no further check",
+     "t": "No: it runs later with no further check",
      "s": "open",
      "o": "",
      "i": "An approval or injection today keeps producing effects later, unchecked"
@@ -3352,7 +3352,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "shown once you say what the agent changes",
    "a": [
     {
-     "t": "It accepts whatever terms come up when a task needs it",
+     "t": "Yes: it accepts whatever terms come up when a task needs it",
      "s": "open",
      "o": "",
      "i": "The agent can commit your organization to terms nobody reviewed"
@@ -3363,7 +3363,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "o": "",
      "i": "Install commands can accept licenses for your organization without anyone seeing them",
      "h": true,
-     "eqt": "It accepts whatever terms come up when a task needs it"
+     "eqt": "Yes: it accepts whatever terms come up when a task needs it"
     },
     {
      "t": "The agent is told not to accept terms without asking",
@@ -3465,7 +3465,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "It can use everything it has access to, whatever the task needs",
+     "t": "No: it can use everything it has access to, whatever the task needs",
      "s": "open",
      "o": "",
      "i": "A small task can touch everything the other agent can reach"
@@ -3765,7 +3765,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Cutting off access needs a code or config change and a redeploy",
+     "t": "No: cutting off access needs a code or config change and a redeploy",
      "s": "open",
      "o": "",
      "i": "Cutting off access takes a release"
@@ -3802,7 +3802,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "There are no backups, versions or rollback for what it changes",
+     "t": "No: there are no backups, versions or rollback for what it changes",
      "s": "open",
      "o": "",
      "i": "Damage is permanent"
@@ -3854,7 +3854,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": "shown only if the agent uses memory",
    "a": [
     {
-     "t": "Memory can't be inspected, or only through the agent itself",
+     "t": "No: memory can't be inspected, or only through the agent itself",
      "s": "open",
      "o": "",
      "i": "You can't see what the agent will trust later"
@@ -4077,7 +4077,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Problems are found only if someone happens to look",
+     "t": "No: problems are found only if someone happens to look",
      "s": "open",
      "o": "",
      "i": "Problems are found by chance, if at all"
@@ -4200,10 +4200,10 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
       ["none", "Not written down anywhere", "Not written down"]] },
     i4: { id: "i4", title: "Does the agent work in folders with files your team didn't write and review?", why: "For example pull requests or forks from others, repositories users give it, cloned open-source code, folders like Downloads, or dependencies that carry their own instruction files.", opts: [
       ["no", "No, only files our team wrote and reviewed"], ["yes", "Yes", "Pull requests from others, cloned repositories, downloads."], ["dk", "Don't know", "Counts as Yes."]] },
-    t2: { id: "t2", multi: true, title: "Where do the tools' credentials live?", why: "Tick all. An inventory for the next three questions; not scored.", opts: [
+    t2: { id: "t2", multi: true, title: "Where do the tools' credentials live?", why: "Tick all. The next question asks who can read them from there. Not scored.", opts: [
       ["prompt", "In the prompt or instruction files"], ["files", "In files (.env, config files, MCP config)"], ["env", "In environment variables"],
       ["app", "In a connected app's configuration or credential store"], ["vault", "In a secret manager or the OS keychain"],
-      ["broker", "With a separate service or broker that uses them on the agent's behalf"], ["cloud", "From the cloud or CI environment (metadata service, workload identity, CI tokens)"], ["output", "They come back in tool output during a session"], ["dk", "Don't know"]] },
+      ["broker", "With a separate service or broker that uses them on the agent's behalf"], ["cloud", "From the cloud or CI environment (metadata service, workload identity, CI tokens)"], ["dk", "Don't know"]] },
     p1: { id: "p1", multi: true, title: "Who made or maintains the MCP servers the agent uses?", why: "Tick all. Decides which questions follow; not scored.", opts: [
       ["official", "Official servers published or maintained by the service's own vendor", "Not merely carrying its name or logo."],
       ["community", "Community or unknown third-party servers", "Marketplaces, GitHub repositories, registries."],
