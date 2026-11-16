@@ -2430,7 +2430,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "cond": null,
    "a": [
     {
-     "t": "Directly on a machine or server under a normal OS account, without a separate execution sandbox",
+     "t": "No sandbox: code runs directly on a machine or server under a normal account",
      "s": "open",
      "o": "",
      "i": "Code runs with everything that account can do"
@@ -2482,7 +2482,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "x2",
    "step": "code",
-   "tb": {"open": ["Anywhere, on at least one path", ""], "out": ["Restricted on every path", "A firewall, proxy or sandbox limits destinations."]},
+   "grp": [["any", "", "", [0]], ["limited", "Limited on every path", "A firewall, proxy or sandbox limits destinations, even if some are still reachable.", [1, 5, 3]], ["unknown", "", "", [4]]],
    "title": "What network destinations can executed code reach?",
    "desc": "Count both the public internet and internal destinations: company services, other machines, services on localhost and other local addresses, and the cloud metadata service. Answer for the least restricted path: agent commands, skill scripts or hooks.",
    "cond": null,
@@ -2507,7 +2507,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "x": true
     },
     {
-     "t": "Only approved destinations (or none), public and internal, on every path and protocol, enforced by a firewall, proxy or network policy that checks where traffic really goes",
+     "t": "Only approved destinations (or none), public and internal, on every path and protocol, enforced by a firewall, proxy or network policy that checks where traffic really goes, including after redirects and DNS changes",
      "s": "held",
      "o": "You",
      "i": "Code can only reach what you approved"
@@ -2519,7 +2519,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": ""
     },
     {
-     "t": "Every path is limited to approved destinations, but the check trusts the hostname the code sends, which code can fake (domain fronting)",
+     "t": "Every path is limited to approved destinations by name, but the check trusts the name rather than where traffic actually goes (for example, domain fronting, or a name that later points to a different address)",
      "s": "partial",
      "o": "You",
      "i": "Code can reach unapproved hosts by disguising where it connects"
@@ -2575,7 +2575,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Only reviewed packages can be installed"
     },
     {
-     "t": "The execution environment prevents installing or executing new code obtained at runtime, including downloaded scripts and packages",
+     "t": "The environment prevents running any new code that arrives during a task, however it arrives: installs, downloads, tool results or shared folders",
      "s": "held",
      "o": "You",
      "i": "Nothing new can be introduced at runtime"
@@ -2651,7 +2651,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "x5",
    "step": "code",
-   "tb": {"open": ["Yes, a known way out", ""], "out": ["Known ways out are closed", "Even if nobody has hardened or tested the isolation."]},
+   "tb": {"open": ["Yes, a known way out", ""], "out": ["The obvious ways out are closed", "Even if nobody has hardened or tested the isolation."]},
    "title": "Can executed code get out of its execution environment?",
    "desc": "Common routes out: the host's Docker socket mounted inside the container, privileged mode, writable mounts of host folders, a privileged host service, a setting or parameter that lets a command run outside the sandbox, or the agent restarting itself in a less restricted mode. Answer for the least isolated path.",
    "cond": "shown when X1 indicates any execution sandbox or isolation boundary exists, including a partially isolated setup",
@@ -2702,7 +2702,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "x6",
    "step": "code",
-   "tb": {"open": ["Yes", ""], "out": ["They were chosen with care", "Even if project files can change what they do."]},
+   "tb": {"open": ["Yes", ""], "out": ["Only safe commands skip approval", "Even if project files can change what they do."]},
    "title": "Can pre-approved commands run other code or send data out?",
    "desc": "Some commands that look harmless aren't. npm test and make run whatever package.json or the Makefile says, find can -exec, git can run programs set in its config or hooks (depending on the operation), and interpreters run any code. Some run code through their own options: sed's e command, awk's system(), tar --to-command, git -c. Others reach the network: ping, nslookup, dig and curl can carry data out in what they send or look up.",
    "cond": "shown when anything runs without per-command approval: pre-approved commands, auto-approve modes, unattended runs",
@@ -2720,7 +2720,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "The command itself appears restricted, but untrusted files or configuration can change what it executes"
     },
     {
-     "t": "Nothing skips approval, or only commands that can't run other code or send data out, whatever the project's files say",
+     "t": "Only commands that can't run other code or send data out skip approval, whatever their configuration, environment variables, plugins or the project's files say",
      "s": "held",
      "o": "You",
      "i": "Every way to run other code or send data out still needs approval"
@@ -2730,6 +2730,12 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "unknown",
      "o": "",
      "i": ""
+    },
+    {
+     "t": "Nothing skips approval: every command needs a person's approval",
+     "s": "held",
+     "o": "You",
+     "i": "Every way to run other code or send data out still needs approval"
     }
    ],
    "fix": null,
@@ -2743,7 +2749,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "x7",
    "step": "code",
-   "tb": {"open": ["It carries over", ""], "out": ["It's reset", "Per task, per session or on a schedule."]},
+   "tb": {"open": ["It carries over", ""], "out": ["It's reset", "On a schedule, per session or per task. Only a reset for each task stops one task's leftovers reaching the next."]},
    "title": "Does each task start in a fresh environment, or can state carry over?",
    "desc": "Consider background processes, scheduled jobs, startup files, modified tools, a reused browser profile (cookies, site storage, service workers), writable shared volumes, external services and anything else that can preserve effects beyond the task.",
    "cond": null,
@@ -4258,7 +4264,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     { k: "skills", name: "Skills, plugins and hooks", desc: "What loads into the agent: instructions, scripts, hooks and bundled components.", when: function (s) { return cap(s, "t3"); }, skip: "You didn't tick “Skills, plugins or hooks”.",
       qs: [["k1"], ["k2"], ["k3", function (s, a) { return third(a.k1); }, "Asked for official and community items."], ["k4"], ["k5"], ["k6", function (s) { return !hz(s); }, "Asked for custom agents only; a harness parses skill files itself."], ["k7"]] },
     { k: "code", name: "Code execution", desc: "Where code runs, what it can reach, install and read, and whether its effects carry over.", when: function (s) { return cap(s, "t4"); }, skip: "You didn't tick “Runs code or commands”.",
-      qs: [["x1"], ["x2"], ["x3"], ["x4"], ["x5", function (s, a) { var t = stOf("x1", a, s); return !!t && t !== "open" && t !== "unknown"; }, "Asked when code runs in some kind of sandbox or isolation."],
+      qs: [["x1"], ["x2"], ["x3"], ["x4"], ["x5", function (s, a) { var t = stOf("x1", a, s); return a.x1 !== undefined && a.x1 !== "0" && t !== "unknown"; }, "Asked when at least some code runs in a sandbox or other isolation."],
            ["x6", function (s) { return !hz(s) || s.q2b !== "always"; }, "Asked when anything runs without per-command approval."], ["x7"]] },
     { k: "browser", name: "Browser", desc: "What the browser carries, what gates its actions, and who else can drive it.", when: function (s) { return cap(s, "t5"); }, skip: "You didn't tick “Drives a web browser”.", qs: [["w1"], ["w2"], ["w3"]] },
     { k: "actions", name: "Actions", desc: "What the agent changes, and what decides, limits and records each change.", when: function (s) { return cap(s, "t10"); }, skip: "You didn't tick “Takes actions that change things”.",
