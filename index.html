@@ -510,13 +510,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "i2",
    "step": "instr",
-   "tb": {"open": ["Yes", "Its edit tool, a shell command or an MCP server can still write them."], "model": ["It's only told not to", ""], "out": ["No", ""]},
+   "grp": [["open", "It can still change them through at least one route", "Its edit tool, a shell command or an MCP server can still write them.", [1, 2, 4]], ["told", "", "", [5]], ["after", "", "", [6]], ["person", "", "", [7]], ["blocked", "", "", [0]], ["unknown", "", "", [3]]],
    "title": "Can the agent rewrite its own instructions and settings?",
    "desc": "For example CLAUDE.md, AGENTS.md, project rules, skill files, and its own settings or permission files. It could write them with its edit tool, a shell command or an MCP server that writes files. Telling it not to doesn't stop it; something has to block it. This question is about the agent changing its own rules. Files someone else wrote that load as its rules, such as a cloned repo's, are I5.",
    "cond": "shown when I1 includes instruction files, or skills and rules stored as local files",
    "a": [
     {
-     "t": "Every way is blocked: file permissions, a read-only folder, or a sandbox plus deny rules for its edit tools",
+     "t": "The agent can't write to them by any route: file permissions, a read-only location, or a sandbox plus deny rules stop its tools, commands and servers",
      "s": "held",
      "o": "You",
      "i": "The agent can't rewrite its own rules"
@@ -556,6 +556,18 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "model",
      "o": "",
      "i": "Only the model's judgment keeps it from rewriting its own rules"
+    },
+    {
+     "t": "Checked at the start and end of every session: the files are compared against an approved copy the agent can't change, and any difference blocks the session or is reverted",
+     "s": "partial",
+     "o": "You",
+     "i": "A rewritten rule can act for the rest of the session before the check catches it"
+    },
+    {
+     "t": "A person approves every change to these files, seeing the exact change, on every route",
+     "s": "partial",
+     "o": "You",
+     "i": "A person can approve a harmful change without noticing"
     }
    ],
    "fix": null,
@@ -870,7 +882,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "m1",
    "step": "memory",
-   "tb": {"open": ["Nothing checks it", "Entries are saved from what the agent or its sessions saw, including content it read."], "model": ["The agent is told what to save", ""], "guard": ["A guard model reviews entries", ""], "out": ["A person, a filter or a locked store", "A person approves entries, a filter checks them, or only certain people can write to memory."]},
+   "grp": [["none", "Nothing checks it", "Entries are saved from what the agent or its sessions saw, including content it read.", [0, 1]], ["told", "", "", [2]], ["guard", "", "", [6]], ["route", "", "", [8]], ["after", "", "", [9]], ["before", "Checked before saving, on every route", "Outside the model, before anything is saved.", [7, 3]], ["locked", "The model can't write free text", "Only people or your own code write memory.", [4, 10]], ["unknown", "", "", [5]]],
    "title": "What decides what gets saved in the agent's memory?",
    "desc": "Memory means anything the agent or its sessions save that later sessions load or retrieve: memory files, notes, conversation summaries, saved state. Knowledge bases that people fill are covered in their own step. Automatic summaries count too: anything the session saw can end up in them.",
    "cond": null,
@@ -882,7 +894,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "One injected page or email can influence future sessions"
     },
     {
-     "t": "{H}'s automatic memory is on: entries are saved from its sessions, and nothing checks them",
+     "t": "{H}'s automatic memory is on: it saves selected information from sessions, with no check before saving",
      "s": "open",
      "o": "",
      "i": "Anything the agent read could end up in memory",
@@ -915,7 +927,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Nobody knows what can get into memory"
     },
     {
-     "t": "A guard model reviews entries before they're saved",
+     "t": "A guard model or guardrail reviews entries before they're saved and can reject them",
      "s": "guard",
      "o": "You",
      "i": "The guard model decides, and it can be fooled too"
@@ -925,6 +937,24 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "partial",
      "o": "You",
      "i": "It catches text that looks like instructions, not false facts"
+    },
+    {
+     "t": "Checked, but not on every route: the memory tool's entries are checked, but the agent can also write the memory file with its edit tool or a shell command",
+     "s": "partial",
+     "o": "You",
+     "i": "A check on one route is bypassed through another"
+    },
+    {
+     "t": "Held until reviewed: entries saved in a session are held until a person reviews them at the end, and they don't load in later sessions before that",
+     "s": "partial",
+     "o": "You",
+     "i": "The session that saved an entry can still use it before it's reviewed"
+    },
+    {
+     "t": "Only your code writes memory, into fixed fields the model can't fill with free text (for example a preferred language)",
+     "s": "held",
+     "o": "You",
+     "i": "The model can't write free text into memory"
     }
    ],
    "fix": null,
@@ -940,7 +970,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "m2",
    "step": "memory",
-   "grp": [["free", "Yes, freely", "", [0, 1]], ["told", "", "", [6]], ["undo", "", "", [3]], ["person", "", "", [2]], ["append", "", "", [4]], ["unknown", "", "", [5]]],
+   "grp": [["free", "Nothing stops it", "The agent can edit or delete entries.", [0, 1]], ["told", "", "", [6]], ["guard", "", "", [7]], ["route", "", "", [8]], ["after", "Fixed after the fact", "Changes can be undone, but nothing stops them happening.", [3, 9]], ["before", "Stopped before it happens, on every route", "", [2, 4]], ["unknown", "", "", [5]]],
    "title": "Can the agent change or delete what's already in memory?",
    "desc": "Example: an injected instruction makes the agent change \"refunds over $100 need a manager\" to \"refunds need no approval\". Deleting counts too, including flooding memory with new entries until older ones stop loading.",
    "cond": "shown unless M1 is \"only authorized people can write\"",
@@ -968,13 +998,13 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "A misleading change can still be approved"
     },
     {
-     "t": "Changes can be rolled back, but nothing stops the agent making them",
+     "t": "Changes are versioned and can be rolled back, but nothing stops the agent making them",
      "s": "partial",
      "o": "You",
      "i": "Damage can be undone, but the malicious change may influence the agent before recovery"
     },
     {
-     "t": "The agent can only add new entries, and adding more can't push older ones out of what loads (for example, the memory store only allows adding, and older entries always load)",
+     "t": "The agent can only add entries: the store itself blocks edits and deletions, and new entries can't push older ones out of what later sessions load",
      "s": "held",
      "o": "You",
      "i": "Earlier entries cannot be modified or erased by a later session"
@@ -990,6 +1020,24 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "model",
      "o": "",
      "i": "Only the model's judgment protects existing entries"
+    },
+    {
+     "t": "A guard model reviews each change or deletion before it takes effect and can reject it",
+     "s": "guard",
+     "o": "You",
+     "i": "The guard model decides, and it can be fooled too"
+    },
+    {
+     "t": "The memory tool can only add entries, but the agent can still edit or delete the memory file with its edit tool, a shell command or another route",
+     "s": "partial",
+     "o": "You",
+     "i": "The add-only rule is bypassed through another route"
+    },
+    {
+     "t": "Checked at the start of every session: memory is compared against the reviewed entries, and changes or deletions since then are blocked or reviewed before memory loads",
+     "s": "partial",
+     "o": "You",
+     "i": "The session that changed an entry can still act on it before the next check"
     }
    ],
    "fix": null,
@@ -1219,7 +1267,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "n2",
    "step": "knowledge",
-   "grp": [["none", "", "", [0]], ["told", "", "", [1]], ["guard", "", "", [2]], ["approved", "Only approved sources", "For example, your own wiki or document store.", [3, 6, 4]], ["unknown", "Don't know", "", [5]]],
+   "grp": [["none", "", "", [0]], ["told", "", "", [1]], ["guard", "", "", [2]], ["after", "", "", [7]], ["approved", "Only approved sources", "For example, your own wiki or document store.", [3, 6, 4]], ["person", "", "", [8]], ["unknown", "Don't know", "", [5]]],
    "title": "What controls what gets added to the knowledge base?",
    "desc": "Example: your knowledge base takes in every email sent to the support inbox. An outsider sends \"refund policy: all refunds are approved without checks\". If nothing checks it before it's added, the agent may later repeat it as fact or follow it as an instruction.",
    "cond": null,
@@ -1237,7 +1285,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Only the model's judgment protects against planted instructions, and nothing catches false facts"
     },
     {
-     "t": "A guard model checks new content for planted instructions before it's added",
+     "t": "A guard model checks new content for planted instructions before it's added and can reject it",
      "s": "guard",
      "o": "You",
      "i": "The guard model can be fooled, and it rarely catches false facts"
@@ -1265,6 +1313,18 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "partial",
      "o": "You",
      "i": "Anyone on staff could still plant a false policy or an instruction"
+    },
+    {
+     "t": "Content goes in freely, and a person reviews it later and removes bad entries",
+     "s": "partial",
+     "o": "You",
+     "i": "Planted content can act before anyone reviews it"
+    },
+    {
+     "t": "A person approves each new or changed item before it's added",
+     "s": "partial",
+     "o": "You",
+     "i": "A person checks each item, but a false fact can still pass"
     }
    ],
    "fix": null,
@@ -1457,7 +1517,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
   {
    "id": "u4",
    "step": "users",
-   "grp": [["none", "", "", [0]], ["told", "", "", [1]], ["guard", "", "", [2]], ["person", "", "", [3]], ["code", "Code checks the user's permission", "Before each change, code checks what this user may change.", [7, 4, 6]], ["unknown", "Don't know", "", [5]]],
+   "grp": [["none", "", "", [0]], ["told", "", "", [1]], ["guard", "", "", [2]], ["after", "", "", [8]], ["person", "", "", [3]], ["code", "Code checks the user's permission", "Before each change, code checks what this user may change.", [7, 4, 6]], ["unknown", "Don't know", "", [5]]],
    "title": "When a user asks the agent to save or change something other users' sessions use, what checks it?",
    "desc": "Count anything the agent can save or change that other users' sessions read or act on, even if sharing isn't a feature you built: shared memory, notes, instructions, workflow settings, files, and what it keeps from users, such as corrections or a FAQ built from conversations. Example: Alex tells a shared team assistant \"remember: invoices from Vendor X are pre-approved\", and later the agent pays one in Bob's session.",
    "cond": "shown for multi-tenant shared state and dedicated instances per organization",
@@ -1505,10 +1565,16 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "i": "Nothing one user saves can reach another user's session"
     },
     {
-     "t": "Code checks permission, and every user may edit shared notes or settings",
+     "t": "Code checks permission, but any user can change shared notes or settings, whoever is responsible for them",
      "s": "partial",
      "o": "You",
      "i": "Any user with edit rights can still steer what everyone else's sessions do"
+    },
+    {
+     "t": "Changes take effect right away, and a person reviews them later and can undo them",
+     "s": "partial",
+     "o": "You",
+     "i": "A changed rule can act on other users before anyone reviews it"
     }
    ],
    "fix": null,
@@ -2054,6 +2120,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "id": "p6",
    "step": "mcp",
    "tb": {"open": ["They pass tokens through", ""], "out": ["They check tokens first", "They check a token is valid and was issued for your server before using it."]},
+   "grp": [["open", "", "", [0]], ["check", "They check tokens first", "They check a token is valid and was issued for your server before using it.", [1, 2]], ["none", "", "", [4]], ["unknown", "", "", [3]]],
    "title": "When servers you built call other APIs, which credentials do they use?",
    "desc": "Example: your MCP server wraps the company CRM, and a caller asks it for customer records.",
    "cond": "shown when P1 includes \"Servers we built\"",
@@ -2081,6 +2148,12 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "unknown",
      "o": "",
      "i": ""
+    },
+    {
+     "t": "They don't call other APIs or services",
+     "s": "held",
+     "o": "You",
+     "i": "There are no downstream credentials to misuse"
     }
    ],
    "fix": null,
@@ -2401,6 +2474,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
    "id": "k7",
    "step": "skills",
    "tb": {"open": ["Everywhere", ""], "out": ["Scoped to projects", "Even if nothing stops a global install."]},
+   "grp": [["open", "", "", [0]], ["scoped", "Scoped to projects", "Even if nothing stops a global install.", [1, 2]], ["one", "", "", [4]], ["unknown", "", "", [3]]],
    "title": "Is each skill or plugin active only where it's needed, or everywhere?",
    "desc": "A skill installed for your whole account, or for every session, loads in every project, including client or sensitive work it was never meant for. Scope applies to the plugin and all components it introduces, including skills, hooks, scripts and MCP servers.",
    "cond": null,
@@ -2428,6 +2502,12 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
      "s": "unknown",
      "o": "",
      "i": ""
+    },
+    {
+     "t": "The agent is used for only one project or one client's work",
+     "s": "held",
+     "o": "You",
+     "i": "There's no other work for an item to leak into"
     }
    ],
    "fix": null,
@@ -4239,7 +4319,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     t2: { id: "t2", multi: true, title: "Where do the tools' credentials live?", why: "Tick all. The next question asks who can read them from there. Not scored.", opts: [
       ["prompt", "In the prompt or instruction files"], ["files", "In files (.env, config files, MCP config)"], ["env", "In environment variables"],
       ["app", "In a connected app's configuration or credential store"], ["vault", "In a secret manager or the OS keychain"],
-      ["broker", "With a separate service or broker that uses them on the agent's behalf"], ["cloud", "From the cloud or CI environment (metadata service, workload identity, CI tokens)"], ["dk", "Don't know"]] },
+      ["broker", "With a separate service or broker that uses them on the agent's behalf"], ["cloud", "From the cloud or CI environment (metadata service, workload identity, CI tokens)"], ["none", "None: the tools don't use credentials"], ["dk", "Don't know"]] },
     p1: { id: "p1", multi: true, title: "Who made or maintains the MCP servers the agent uses?", why: "Tick all. Decides which questions follow; not scored.", opts: [
       ["official", "Official servers published or maintained by the service's own vendor", "Not merely carrying its name or logo."],
       ["community", "Community or unknown third-party servers", "Marketplaces, GitHub repositories, registries."],
@@ -4281,7 +4361,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     { k: "users", name: "Users", desc: "Four separate checks: who is asking, what they may reach, whether one person's data stays apart from another's, and who sees the replies.", when: function (s) { return multiTen(s) || s.ten === "peruser" || cap(s, "t9"); }, skip: "The agent works for one person and doesn't accept requests from others.",
       qs: [["u1"], ["u2", function (s) { return multiTen(s) || cap(s, "t9"); }, "Asked when many people share one agent, or it accepts requests from others."], ["u3", function (s) { return multiTen(s) || (cap(s, "t9") && cap(s, "t7")); }, "Asked when many people share one agent, or it accepts requests from others and remembers things."], ["u4", function (s) { return multiTen(s); }, "Asked when many people share one agent."], ["u5", function (s) { return multiTen(s) || cap(s, "t9"); }, "Asked when many people share one agent, or it accepts requests from others."]] },
     { k: "tools", name: "Tools", desc: "Whether the tool set can change, the credentials tools use, and whether tool results and arguments are trusted.", when: function (s) { return cap(s, "t1"); }, skip: "You didn't tick “Tools or APIs”.",
-      qs: [["t1"], ["t2"], ["t3"], ["t4"], ["t5"], ["t6"], ["t7", function (s, a) { return !hz(s) || inc(a.p1, "ours"); }, "Asked for custom agents, or when you built your own MCP servers."]] },
+      qs: [["t1"], ["t2"], ["t3", function (s, a) { return !(a.t2 && a.t2.length === 1 && a.t2[0] === "none"); }, "Asked when the tools use credentials."], ["t4", function (s, a) { return !(a.t2 && a.t2.length === 1 && a.t2[0] === "none"); }, "Asked when the tools use credentials."], ["t5", function (s, a) { return !(a.t2 && a.t2.length === 1 && a.t2[0] === "none"); }, "Asked when the tools use credentials."], ["t6", function (s) { return cap(s, "t10") || cap(s, "t4") || cap(s, "t5"); }, "Asked when the agent can change things: it takes actions, runs code or drives a browser."], ["t7", function (s, a) { return !hz(s) || inc(a.p1, "ours"); }, "Asked for custom agents, or when you built your own MCP servers."]] },
     { k: "mcp", name: "MCP servers", desc: "Who made them, what can connect, whether they change, and what they can reach.", when: function (s) { return cap(s, "t2"); }, skip: "You didn't tick “MCP servers”.",
       qs: [["p1"], ["p2"], ["p3", function (s, a) { return third(a.p1); }, "Asked for official and community servers."], ["p4", function (s, a) { return third(a.p1); }, "Asked for official and community servers."],
            ["p5", function (s, a) { return inc(a.p1, "ours"); }, "Asked for servers you built."], ["p6", function (s, a) { return inc(a.p1, "ours"); }, "Asked for servers you built."], ["p7", function (s, a) { return third(a.p1); }, "Asked for locally run official and community servers."]] },
@@ -4297,12 +4377,12 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
            ["a6", function (s, a) { return a.a0 === "outside" || a.a0 === "both"; }, "Asked when it changes outside systems."], ["a7", function (s, a) { return !!a.a0; }, "Asked for any agent that makes changes."], ["a8", function (s, a) { return !!a.a0; }, "Asked for any agent that makes changes."], ["a9", function (s, a) { return !!a.a0; }, "Asked for any agent that makes changes."]] },
     { k: "agents", name: "Other agents", desc: "Requests from other agents, work handed to them, and results that come back.", when: function (s) { return cap(s, "t11"); }, skip: "You didn't tick “Works with other agents”.", qs: [["g0"], ["g1", function (s, a) { return agentsIn(a); }, "Asked when other agents send it requests."], ["g2", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."], ["g3", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."], ["g4", function (s, a) { return agentsOut(a); }, "Asked when it starts sub-agents or hands work to other agents."]] },
     { k: "oversight", name: "Oversight", desc: "Whether you can reconstruct, stop, revoke, recover and get alerted, and what the agent depends on.", when: function () { return true; },
-      qs: [["o1"], ["o2"], ["o3"], ["o4"], ["o5", function (s) { return cap(s, "t7"); }, "Asked when the agent uses memory."], ["o6"], ["o7"], ["o8"], ["o9"]], box: ["o1", "o2", "o3", "o4", "o5", "o9"] }
+      qs: [["o1"], ["o2"], ["o3"], ["o4", function (s) { return cap(s, "t10") || cap(s, "t4") || cap(s, "t5"); }, "Asked when the agent can change things: it takes actions, runs code or drives a browser."], ["o5", function (s) { return cap(s, "t7"); }, "Asked when the agent uses memory."], ["o6"], ["o7"], ["o8"], ["o9"]], box: ["o1", "o2", "o3", "o4", "o5", "o9"] }
   ];
   var DISP = { c3: "C2", a6: "A5", a7: "A6", a8: "A7", a9: "A8" };
   function dispId(id) { id = String(id); return DISP[id] || id.toUpperCase(); }
   var SHORT = {"i2": "Changing its own rules", "i3": "Overriding your instructions", "i5": "Unreviewed setup files", "i6": "Secrets in instructions", "c1": "Injected actions", "c3": "Ways to send data out", "m1": "What gets saved to memory", "m2": "Changing saved memory", "m3": "Memory per client or project", "m4": "Sensitive data in memory", "n1": "Search per person's access", "n2": "Adding to the knowledge base", "u1": "Who sent the request", "u2": "Acting within the person's access", "u3": "Data crossing users", "u4": "Changes that affect other users", "u5": "Who sees the reply", "t1": "New tools mid-session", "t3": "Who can read credentials", "t4": "What credentials can do", "t5": "How long a leaked credential works", "t6": "Trusting tool results", "t7": "Checking tool inputs", "p2": "Adding MCP servers", "p3": "Servers changing after review", "p4": "Reviewing MCP servers", "p5": "Who can call your servers", "p6": "Your servers' credentials", "p7": "What local servers can reach", "k2": "Adding skills and plugins", "k3": "Reviewing skills and plugins", "k4": "Skills changing after review", "k5": "Skills raising permissions", "k6": "Reading skill file headers", "k7": "Where skills are active", "x1": "Where code runs", "x2": "Network reach", "x3": "Installing packages", "x4": "Secrets on the machine", "x5": "Escaping the sandbox", "x6": "Pre-approved commands", "x7": "Fresh environment per task", "w1": "Browser sign-ins and saved data", "w2": "Approving browser actions", "w3": "Browser control channel", "a1": "Review before changes go live", "a2": "Files that run automatically", "a3": "Checking each request", "a4": "Approving high-impact actions", "a6": "Actions happening twice", "a7": "Total limits", "a8": "Scheduled work", "a9": "Agreements on your behalf", "g1": "Requests from other agents", "g2": "What a hand-off can reach", "g3": "Your rules in hand-offs", "g4": "What other agents send back", "o1": "Action records", "o2": "Stopping the agent", "o3": "Cutting off access", "o4": "Undoing mistakes", "o5": "Where memories came from", "o6": "Data sent to model providers", "o7": "Model changes", "o8": "Software changes", "o9": "Alerts"};
-  var CHECKS = {"i2": "Whether anything stops the agent editing those files, by any route: its edit tool, shell commands or MCP servers.", "i3": "Whether untrusted text reaches the same model that makes decisions, or something keeps the two apart.", "i5": "Whether someone has to approve or check those files, and every change to them, before they load.", "i6": "Whether your instructions contain anything an attacker could use, such as keys, internal addresses or how your checks work.", "c1": "Whether anything stops a web page, email or file from getting the agent to do something outside its task.", "c3": "Where the agent can send data, counting every route, and whether anything checks which data goes where.", "m1": "Whether anything checks what gets saved to memory before it's saved.", "m2": "Whether anything stops the agent changing or deleting memory entries that already exist.", "m3": "Whether the system, not the model, makes sure each session sees only its own client's or project's memory.", "m4": "Whether anything stops sensitive data being saved to memory.", "n1": "Whether search returns only what the person asking is allowed to see, before the model sees the results.", "n2": "Who can add or change content in these sources, and whether new content is checked before it's added.", "u1": "Whether the agent's tools know who is asking from a real sign-in, not from what the message says.", "u2": "Whether each tool checks that the person asking is allowed to see or change that data.", "u3": "Whether every place the agent stores or reads data keeps each person's data apart.", "u4": "Whether a permission check stops users changing things other users' sessions rely on.", "u5": "Whether the model can choose who sees a reply, and whether anything checks those people are allowed to see it.", "t1": "Whether the agent's tools stay fixed for the session, or every change needs approval.", "t3": "Whether the model, or commands the agent runs, can read the tools' keys and tokens.", "t4": "How much more the agent's most powerful credential can do than its tools actually need.", "t5": "How long a credential keeps working, and whether it expires on its own.", "t6": "Whether an important result is checked against a source the tool can't change before the agent acts on it.", "t7": "Whether your tools check the values the model sends them before using them.", "p2": "Whether a server can be added or changed without someone approving it.", "p3": "Whether a change to an approved server is noticed and blocked until someone reviews it.", "p4": "What someone checks before a server is turned on or updated, and whether it's kept to what was approved.", "p5": "Whether your servers check who is calling them, and what each caller may do.", "p6": "Whether each caller gets only their own permissions when your server calls other systems.", "p7": "What a third-party server running on your machine can read and connect to.", "k2": "Whether a skill, plugin or hook can be added or changed without someone approving it.", "k3": "What someone checks before an item is turned on or updated, and whether it's kept to the permissions approved.", "k4": "Whether a change to a reviewed item is noticed and blocked, including content it downloads when it runs.", "k5": "Whether skills and plugins can change the agent's permissions, or only your own settings can.", "k6": "Whether reading a skill file's header can run code or build objects.", "k7": "Whether each item loads only in the projects it's approved for.", "x1": "Whether code the agent runs is boxed in, away from your machine and your account.", "x2": "Where code the agent runs can connect, and whether the check looks at where traffic really goes.", "x3": "Whether only approved, checked packages can be installed or run.", "x4": "Whether code the agent runs can read secrets on the machine that the task doesn't need.", "x5": "Whether the known ways out of the sandbox are closed, and whether anyone has tested it.", "x6": "Whether commands that run without approval can be made to run other code or send data out.", "x7": "Whether each task starts in a clean environment.", "w1": "What the agent's browser is signed in to and has saved, compared with what the task needs.", "w2": "Whether a person approves each action that matters, seeing the real site and the details.", "w3": "Whether anything besides the agent can send commands to its browser.", "a1": "Whether a person reviews the final change before it goes live, in a step the agent can't skip.", "a2": "Whether changes to these files can run, or reach secrets, before someone approves them.", "a3": "Whether something outside the agent checks each request before it runs: who it's for, what it does, where it goes and how much.", "a4": "Whether a person decides on these actions, approving the exact action each time.", "a6": "Whether repeating a request can repeat its effect.", "a7": "Whether something outside the agent caps the total it can do: actions, money, cost and time.", "a8": "Whether creating scheduled work needs approval, whether each run is limited and checked again, and whether you can see and stop every schedule.", "a9": "Whether someone allowed to commit your organization must approve each acceptance after reading the exact terms.", "g1": "Whether your agent knows which agent sent a request, and whether code limits what each one can ask for.", "g2": "Whether the other agent gets only what the task needs, and loses it when the task ends.", "g3": "Whether your rules are enforced on the other agent, not just passed to it as text.", "g4": "Whether what comes back reaches your agent's model as free text, or only as fixed fields that code checks.", "o1": "Whether every action is recorded in full, somewhere the agent can't change.", "o2": "Whether someone can stop the agent and everything it started, from outside the model.", "o3": "Whether you can cut off all the agent's access within minutes, including tokens already issued.", "o4": "Whether you can undo what the agent did, from tested backups it can't touch.", "o5": "Whether the system records where each memory entry came from, in a way the agent can't fake.", "o6": "Whether each provider is allowed to get the data you send it, and data it isn't allowed is removed first.", "o7": "Whether the model on every route, including fallbacks, stays fixed until you've reviewed and tested a change.", "o8": "Whether every part of the agent is pinned to an exact, checked version, with changes reviewed.", "o9": "Whether something alerts a person who can act, in time, from records the agent can't change."};
+  var CHECKS = {"i2": "Whether anything stops the agent editing those files, by any route: its edit tool, shell commands or MCP servers.", "i3": "Whether untrusted text reaches the same model that makes decisions, or something keeps the two apart.", "i5": "Whether someone has to approve or check those files, and every change to them, before they load.", "i6": "Whether your instructions contain anything an attacker could use, such as keys, internal addresses or how your checks work.", "c1": "Whether anything stops a web page, email or file from getting the agent to do something outside its task.", "c3": "Where the agent can send data, counting every route, and whether anything checks which data goes where.", "m1": "Whether anything checks what gets saved to memory before it's saved.", "m2": "Whether anything stops the agent changing or deleting memory entries that already exist.", "m3": "Whether the system, not the model, makes sure each session sees only its own client's or project's memory.", "m4": "Whether anything stops sensitive data being saved to memory.", "n1": "Whether search returns only what the person asking is allowed to see, before the model sees the results.", "n2": "Who can add or change content in these sources, and whether new content is checked before it's added.", "u1": "Whether the agent's tools know who is asking from a real sign-in, not from what the message says.", "u2": "Whether each tool checks that the person asking is allowed to see or change that data.", "u3": "Whether every place the agent stores or reads data keeps each person's data apart.", "u4": "Whether a permission check stops users changing things other users' sessions rely on.", "u5": "Whether the model can choose who sees a reply, and whether anything checks those people are allowed to see it.", "t1": "Whether the agent's tools stay fixed for the session, or every change needs approval.", "t3": "Whether the model, or commands the agent runs, can read the tools' keys and tokens.", "t4": "Whether the agent's most powerful credential can do more than its tools need.", "t5": "How long a credential keeps working, and whether it expires on its own.", "t6": "Whether a tool result that leads to an action that matters, such as a payment or a deletion, is checked against a source the tool can't change first.", "t7": "Input validation: whether your tools check each value the model sends before using it in a query, command, file path or URL.", "p2": "Whether a server can be added or changed without someone approving it.", "p3": "Whether a change to an approved server is noticed and blocked until someone reviews it.", "p4": "What someone checks before a server is turned on or updated, and whether it's kept to what was approved.", "p5": "Whether your servers check who is calling them, and what each caller may do.", "p6": "Whether each caller gets only their own permissions when your server calls other systems.", "p7": "What a third-party server running on your machine can read and connect to.", "k2": "Whether a skill, plugin or hook can be added or changed without someone approving it.", "k3": "What someone checks before an item is turned on or updated, and whether it's kept to the permissions approved.", "k4": "Whether a change to a reviewed item is noticed and blocked, including content it downloads when it runs.", "k5": "Whether skills and plugins can change the agent's permissions, or only your own settings can.", "k6": "Whether reading a skill file's header can run code or build objects.", "k7": "Whether each item loads only in the projects it's approved for.", "x1": "Whether code the agent runs is boxed in, away from your machine and your account.", "x2": "Where code the agent runs can connect, and whether the check looks at where traffic really goes.", "x3": "Whether only approved, checked packages can be installed or run.", "x4": "Whether code the agent runs can read secrets on the machine that the task doesn't need.", "x5": "Whether the known ways out of the sandbox are closed, and whether anyone has tested it.", "x6": "Whether commands that run without approval can be made to run other code or send data out.", "x7": "Whether each task starts in a clean environment.", "w1": "What the agent's browser is signed in to and has saved, compared with what the task needs.", "w2": "Whether a person approves each action that matters, seeing the real site and the details.", "w3": "Whether anything besides the agent can send commands to its browser.", "a1": "Whether a person reviews the final change before it goes live, in a step the agent can't skip.", "a2": "Whether changes to these files can run, or reach secrets, before someone approves them.", "a3": "Whether something outside the agent checks each request before it runs: who it's for, what it does, where it goes and how much.", "a4": "Whether a person decides on these actions, approving the exact action each time.", "a6": "Whether repeating a request can repeat its effect.", "a7": "Whether something outside the agent caps the total it can do: actions, money, cost and time.", "a8": "Whether creating scheduled work needs approval, whether each run is limited and checked again, and whether you can see and stop every schedule.", "a9": "Whether someone allowed to commit your organization must approve each acceptance after reading the exact terms.", "g1": "Whether your agent knows which agent sent a request, and whether code limits what each one can ask for.", "g2": "Whether the other agent gets only what the task needs, and loses it when the task ends.", "g3": "Whether your rules are enforced on the other agent, not just passed to it as text.", "g4": "Whether what comes back reaches your agent's model as free text, or only as fixed fields that code checks.", "o1": "Whether every action is recorded in full, somewhere the agent can't change.", "o2": "Whether someone can stop the agent and everything it started, from outside the model.", "o3": "Whether you can cut off all the agent's access within minutes, including tokens already issued.", "o4": "Whether you can undo what the agent did, from tested backups it can't touch.", "o5": "Whether the system records where each memory entry came from, in a way the agent can't fake.", "o6": "Whether each provider is allowed to get the data you send it, and data it isn't allowed is removed first.", "o7": "Whether the model on every route, including fallbacks, stays fixed until you've reviewed and tested a change.", "o8": "Whether every part of the agent is pinned to an exact, checked version, with changes reviewed.", "o9": "Whether something alerts a person who can act, in time, from records the agent can't change."};
   var openChecks = {};
   var CATS = {"i2": ["Instruction tampering by the agent", "it rewrites its own rule or settings files, and the change lasts for every later session."], "i3": ["Prompt injection (direct and indirect)", "text the agent reads, typed by a user or hidden in content, gets it to ignore your instructions for the current task."], "i5": ["Instruction tampering through third-party files", "files someone else wrote, such as a cloned repo's rule file, hooks or MCP config, load as the agent's rules."], "i6": ["System prompt leakage", "the agent is tricked into revealing its instructions (prompt extraction)."], "c1": ["Indirect prompt injection leading to unauthorized actions", "an instruction hidden in a web page, email or file gets the agent to use a tool for something outside its task."], "c3": ["Data exfiltration", "injected content gets the agent to send your data to an attacker, through a tool, a web request, or a link or image in its reply."], "m1": ["Memory poisoning", "untrusted content is saved to memory and steers later sessions."], "m2": ["Memory tampering", "existing memory entries are rewritten or deleted, such as an approval rule later sessions rely on."], "m3": ["Cross-tenant data leakage", "memory from one client's or project's work surfaces in another's."], "m4": ["Sensitive data exposure through memory", "secrets or personal data are saved to memory and come back later, in replies, tool calls or to anyone who can read the store."], "n1": ["Broken access control in retrieval", "search returns documents the person asking isn't allowed to see."], "n2": ["Knowledge base poisoning", "someone plants false content or instructions in a source the agent searches."], "u1": ["Identity spoofing", "someone claims to be another user, and the agent believes them."], "u2": ["Confused deputy", "the agent uses its own wide access for someone who isn't allowed that data."], "u3": ["Cross-user data leakage", "one person's data, kept anywhere the agent reads, appears in another person's conversation."], "u4": ["Cross-user poisoning", "one user saves a note, memory, instruction or setting that changes what the agent does for other users."], "u5": ["Unintended disclosure", "a reply or message reaches people who shouldn't see it, such as a group channel."], "t1": ["Unapproved capability change", "a tool, server or skill is added or changed mid-session, after your review."], "t3": ["Credential theft", "the agent, or code it runs, reads the tools' keys and tokens and leaks or misuses them."], "t4": ["Excessive privilege", "a credential can do far more than the agent's job needs, so any misuse does more damage."], "t5": ["Long-lived credential exposure", "a leaked credential keeps working long after it leaked."], "t6": ["Trusting false tool output", "a wrong or faked tool result leads the agent into a harmful action."], "t7": ["Injection through tool arguments", "values the model passes to your tools end up in SQL, shell commands, file paths or URLs (SQL injection, command injection, path traversal, SSRF)."], "p2": ["Rogue MCP server", "a server is added or changed without review, through a config file, a plugin or the agent itself."], "p3": ["Rug pull", "a server you approved changes afterwards: new code, new dependencies or new tool descriptions."], "p4": ["Tool poisoning", "a third-party server's tool descriptions or instructions carry hidden instructions, or its behavior is risky."], "p5": ["Unauthenticated server access", "anyone who can reach your server calls its tools and the data behind them."], "p6": ["Token passthrough and over-privileged service accounts", "your server passes a caller's token on unchecked, or calls other APIs with one broad account, so callers get more than their own permissions."], "p7": ["Malicious local server", "a third-party server running on your machine reads files and credentials or reaches your network."], "k2": ["Unapproved extension", "a skill, plugin or hook is added or changed without review, by a user, a project or the agent itself."], "k3": ["Malicious extension", "a third-party item carries hidden instructions, harmful scripts or hooks, or risky bundled components."], "k4": ["Rug pull", "an item you reviewed changes afterwards, by updating itself or downloading instructions or code when it runs."], "k5": ["Privilege escalation through extensions", "loading an item grants extra permissions or skips your approvals."], "k6": ["Unsafe deserialization", "a crafted skill file's YAML header makes your parser build objects or run code."], "k7": ["Excessive scope", "an item loads in projects it was never meant for, including other clients' work."], "x1": ["Unsandboxed code execution", "code the agent runs (commands, skill scripts, hooks) runs with your full account."], "x2": ["Data exfiltration and SSRF", "code the agent runs sends data out, or reaches internal services and the cloud metadata service."], "x3": ["Malicious or compromised package", "the agent installs or runs a fake package (typosquatting) or a compromised update."], "x4": ["Credential theft from the host", "code the agent runs reads SSH keys, cloud logins, browser cookies or other secrets on the machine."], "x5": ["Sandbox escape", "code gets out of its sandbox to the host, for example through a mounted Docker socket, privileged mode or a writable host folder."], "x6": ["Abuse of allowed commands (living off the land)", "a pre-approved command such as npm test or git is made to run other code or send data out."], "x7": ["Persistence between tasks", "something one task leaves behind, such as a background process, affects later tasks."], "w1": ["Session and credential abuse", "a tricked agent uses the browser's signed-in sessions, saved passwords or payment details."], "w2": ["Phishing and unauthorized browser actions", "a page tricks the agent into signing in, paying or submitting data on a fake or wrong site."], "w3": ["Browser hijacking", "another program connects to the browser's control channel, such as a debugging port, and acts as the signed-in user."], "a1": ["Unreviewed changes", "the agent's code or file changes reach other people without a real review."], "a2": ["Poisoned pipeline execution", "the agent edits a CI pipeline, git hook or build script, and it runs with secrets before review."], "a3": ["Unauthorized action", "an injected or mistaken request, with a wrong amount, recipient or target, goes through because the agent's credential allows it."], "a4": ["Excessive agency", "the agent takes an action that matters or can't easily be undone, with no person deciding."], "a6": ["Duplicate execution", "a retry repeats an action, such as a payment, after a timeout."], "a7": ["Cumulative abuse", "many actions, each allowed on its own, add up to serious damage, such as 100 refunds just under the limit."], "a8": ["Persistence through scheduled tasks", "injected content creates a scheduled job that keeps acting after the session ends (MITRE ATT&CK T1053)."], "a9": ["Unauthorized commitment", "the agent accepts terms, licenses or agreements that bind your organization."], "g1": ["Agent impersonation and unauthorized requests", "another agent, possibly compromised, asks yours for something it isn't allowed to."], "g2": ["Excessive delegated privilege", "an agent you hand work to can reach more than the task needs."], "g3": ["Control bypass through delegation", "work handed to another agent skips your agent's rules and approvals."], "g4": ["Prompt injection through agent results", "another agent's result carries instructions it picked up from content it read."], "o1": ["Repudiation and log tampering", "after an incident you can't prove what the agent did, because records are missing or were changed."], "o2": ["Runaway agent", "a misbehaving agent, or work it started, can't be stopped."], "o3": ["Continued access after compromise", "a compromised agent's credentials keep working while you try to cut it off."], "o4": ["Unrecoverable damage", "the agent deletes or changes something, and it can't be restored."], "o5": ["Untraceable memory poisoning", "a planted memory steers the agent, and nothing shows where it came from."], "o6": ["Third-party data exposure", "data sent to a model provider is kept, trained on or processed where your rules don't allow."], "o7": ["Unreviewed model change", "a model update changes how the agent follows instructions or resists attacks, without testing."], "o8": ["Software supply chain compromise", "a dependency, base image or harness update brings in malicious or untested code."], "o9": ["Undetected attack", "suspicious activity, such as data going to a new domain, goes unnoticed."]};
   var SCEN = {};
