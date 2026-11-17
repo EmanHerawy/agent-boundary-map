@@ -46,7 +46,7 @@ The rest of this page goes question by question, in the order the map asks them.
 ## Instructions
 
 ### I2 · Changing its own rules
-> Can the agent change the instruction or settings files it loads?
+> Can the agent rewrite its own instructions and settings?
 
 - **Demonstrated attack:** [GitHub Copilot, CVE-2025-53773](https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/) (Embrace The Red, Aug 2025). Injected instructions made Copilot edit the project's `settings.json` to auto-approve its own tools, then run shell commands. It was fixed in Aug 2025. If an agent can write its own settings, injected text can switch off its safeguards.
 
@@ -57,7 +57,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Research:** [Beurer-Kellner et al., *Design Patterns for Securing LLM Agents*](https://arxiv.org/abs/2506.08837) (2025). It describes agent designs with provable resistance to prompt injection, which shows what a protection outside the model can look like.
 
 ### I5 · Folder files changing setup
-> What stops files you didn't review from changing the agent's instructions or settings?
+> What stops files from someone else, such as a cloned repo, loading as the agent's instructions or settings?
 
 - **Real incident:** [Instruction-file poisoning](https://labs.cloudsecurityalliance.org/research/csa-research-note-agent-instruction-file-poisoning-20261027/) (Cloud Security Alliance, Oct 2026). A compromised contributor account committed agent files that run a credential stealer when the repo is opened in an AI tool.
 - **Demonstrated attack:** [Claude Code project files, CVE-2025-59536](https://research.checkpoint.com/2026/rce-and-api-token-exfiltration-through-claude-code-project-files/) (Check Point, Feb 2026). MCP servers defined in a cloned repo started before the trust prompt appeared, and its hooks ran once the user accepted that general prompt, with no warning about them. It was fixed.
@@ -65,7 +65,7 @@ The rest of this page goes question by question, in the order the map asks them.
 - **Demonstrated attack:** [Rules File Backdoor](https://pillar.security/blog/new-vulnerability-in-github-copilot-and-cursor-how-hackers-can-weaponize-code-agents) (Pillar Security, Mar 2025). Invisible Unicode characters in Cursor and Copilot rules files hid instructions from people, even during pull-request review. A review only protects you if it can see what the agent will read.
 
 ### I6 · Leaked instructions
-> If someone got the agent to repeat its instructions, would that help them?
+> If someone tricked the agent into revealing its instructions, what could they learn from them?
 
 - **Real incident:** [Bing Chat spills its secrets](https://arstechnica.com/information-technology/2023/02/ai-powered-bing-chat-spills-its-secrets-via-prompt-injection-attack/) (Ars Technica, Feb 2023). A prompt injection made Bing Chat reveal its hidden instructions, including its codename, Sydney.
 - **Standard:** [OWASP LLM07:2025 System Prompt Leakage](https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/). A system prompt isn't secret. Keep credentials out of it, and don't rely on it as a security control.
