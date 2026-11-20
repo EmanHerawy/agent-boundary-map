@@ -444,7 +444,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     </div>
     <h2 id="qTitle"></h2>
     <p class="bdesc" id="qDesc"></p>
-    <p class="qguidance" id="qGuidance" hidden>Choose the answer that matches the <strong>least-protected route</strong> today. Options describe the effective control, not just the product or mechanism you use. If you cannot verify how it is enforced, choose <strong>Don’t know</strong>.</p>
+    <p class="qguidance" id="qGuidance" hidden>Choose the answer that matches the <strong>least-protected route</strong> today. Options describe the effective control, not just the product or mechanism you use. If several controls protect the same route, count them together and choose the answer that describes what they achieve combined. If you cannot verify how it is enforced, choose <strong>Don’t know</strong>.</p>
     <div class="qprogress" id="qProgress" aria-label="Section progress" hidden><div class="qprogress-track"><span id="qProgressFill"></span></div><span id="qProgressText"></span></div>
     <nav class="stepnav" id="qSteps" aria-label="Jump to a step"></nav>
     <div class="qlist" id="qList"></div>
@@ -4592,7 +4592,7 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     wrap.appendChild(box);
     return wrap;
   }
-  /* Two-step answer picker for scored questions. Step 1 asks how the boundary is protected, using the
+  /* Two-step answer picker for scored questions. Step 1 answers the question's title, using the
      question's own labels; a choice with one answer shows that answer and is picked in one step; a status with several opens a second step to choose between them.
      The saved answer is still one of the question's own answers, so scoring and reports don't change. */
   var TREE = [["open", "Not protected", "Nothing stops it."], ["model", "Relies on the model", "Only the model's instructions or judgment."],
@@ -4628,7 +4628,10 @@ body:has(#v-intro:not([hidden])) { background: #1d2833; color-scheme: dark; }
     var cur = opts.filter(function (o) { return o.v === current; })[0], pend = pendingBucket[id];
     if (!pend || members(pend).length < 2 || (cur && keyOf(cur) === pend)) { delete pendingBucket[id]; pend = null; }
     var bk = pend || (cur ? keyOf(cur) : null);
-    var tb = (Q[id] && Q[id].tb) || {}, step = el("fieldset", "tstep opts"), l1 = el("legend", "tlabel", (Q[id] && Q[id].tl) || "How is this protected?"); l1.id = "tl1-" + id; step.setAttribute("aria-labelledby", t.id + " " + l1.id); step.appendChild(l1);
+    // The title is the question, so step 1 has no heading of its own unless the question sets one ("tl").
+    var tb = (Q[id] && Q[id].tb) || {}, tl = Q[id] && Q[id].tl, step = el("fieldset", "tstep opts");
+    step.setAttribute("aria-labelledby", t.id + (tl ? " tl1-" + id : ""));
+    if (tl) { var l1 = el("legend", "tlabel", tl); l1.id = "tl1-" + id; step.appendChild(l1); }
     (flat ? opts.map(function (o) { return ["a" + o.v, "", ""]; }) : grp || TREE).forEach(function (b) {
       var m = members(b[0]); if (!m.length) return;
       var lab = el("label", "opt" + (bk === b[0] ? " on" : "")), inp = el("input");
